@@ -3,341 +3,328 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ultimate Toyhou.se Layout Builder</title>
+    <title>Toyhou.se iPad-Friendly Studio</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f1f3f5; font-family: system-ui, -apple-system, sans-serif; }
-        .sidebar { background-color: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; top: 0; left: 0; width: 360px; overflow-y: auto; padding: 20px; z-index: 100; }
-        .main-content { margin-left: 360px; padding: 30px; }
-        .component-box { background: #f8f9fa; border: 1px solid #ced4da; border-radius: 6px; padding: 15px; margin-bottom: 15px; }
-        .draggable-btn { cursor: grab; width: 100%; text-align: left; margin-bottom: 10px; }
-        .draggable-btn:active { cursor: grabbing; }
-        .workspace { min-height: 500px; background: #fff; border: 3px dashed #0d6efd; border-radius: 12px; padding: 25px; transition: background 0.2s; }
-        .workspace.drag-over { background-color: #e7f1ff; border-color: #0a58ca; }
-        .workspace:empty::before { content: "Drag and drop components here to assemble your profile..."; color: #6c757d; display: block; text-align: center; line-height: 450px; font-weight: 500; }
+        body { background-color: #f4f6f9; font-family: system-ui, -apple-system, sans-serif; }
+        .sidebar { background-color: #fff; border-right: 1px solid #dee2e6; height: 100vh; position: fixed; top: 0; left: 0; width: 320px; overflow-y: auto; padding: 20px; z-index: 100; }
+        .main-content { margin-left: 320px; padding: 30px; }
+        .component-bank-item { background: #e9ecef; border: 1px solid #ced4da; border-radius: 8px; padding: 12px; margin-bottom: 10px; cursor: pointer; font-weight: 500; text-align: center; transition: background 0.2s; -webkit-user-select: none; user-select: none; }
+        .component-bank-item:active { background: #dee2e6; }
         
-        /* Workspace Interactivity */
-        .workspace-item { position: relative; margin-bottom: 20px; padding: 10px; border: 1px dashed transparent; border-radius: 6px; }
-        .workspace-item:hover { border-color: #dc3545; background-color: rgba(220, 53, 69, 0.02); }
-        .delete-btn { display: none; position: absolute; top: -10px; right: -10px; z-index: 99; border-radius: 50%; width: 24px; height: 24px; padding: 0; line-height: 22px; text-align: center; }
-        .workspace-item:hover .delete-btn { display: block; }
+        .workspace { min-height: 400px; background: #fff; border: 3px dashed #0d6efd; border-radius: 12px; padding: 20px; }
+        .workspace:empty::before { content: "Tap any component on the left to add it to your canvas..."; color: #6c757d; display: block; text-align: center; line-height: 350px; }
+        
+        /* Interactive items placed on canvas */
+        .workspace-item { position: relative; margin-bottom: 20px; padding: 15px; border: 2px solid transparent; border-radius: 8px; cursor: pointer; transition: all 0.2s; }
+        .workspace-item:hover { border-color: #6c757d; }
+        .workspace-item.selected { border-color: #0d6efd; background-color: rgba(13, 110, 253, 0.03); box-shadow: 0 0 10px rgba(13, 110, 253, 0.1); }
+        
+        /* Action buttons inside workspace elements */
+        .item-actions { display: none; position: absolute; top: -12px; right: 10px; z-index: 99; }
+        .workspace-item.selected .item-actions, .workspace-item:hover .item-actions { display: flex; }
+        .action-btn { border-radius: 50%; width: 26px; height: 26px; padding: 0; line-height: 24px; text-align: center; font-size: 14px; margin-left: 5px; }
+
+        /* Custom Inspector Panel at the bottom or overlay */
+        .inspector-panel { background: #fff; border-top: 2px solid #0d6efd; position: fixed; bottom: 0; left: 320px; right: 0; height: 260px; z-index: 1000; box-shadow: 0 -5px 15px rgba(0,0,0,0.05); padding: 20px; overflow-y: auto; }
+        .inspector-empty { text-align: center; line-height: 200px; color: #6c757d; font-style: italic; }
+        
+        .pad-bottom { margin-bottom: 280px; } /* Prevent workspace from getting covered by inspector */
     </style>
 </head>
 <body>
 
     <div class="sidebar">
-        <h3 class="mb-1 fw-bold text-primary">Toyhou.se Studio</h3>
-        <p class="text-muted small mb-4">Customize settings, then drag the blue buttons into your workspace.</p>
-        
+        <h4 class="fw-bold text-primary mb-1">Elements Bank</h4>
+        <p class="text-muted small mb-4">Tap any element below to add it instantly to your workspace layout.</p>
         <hr>
-
-        <div class="component-box">
-            <h6 class="fw-bold">1. Header & Text</h6>
-            <div class="mb-2">
-                <input type="text" id="text-content" class="form-control form-control-sm" value="Character Name / Title">
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-6">
-                    <label class="small text-muted">Text Color</label>
-                    <input type="color" id="text-color" class="form-control form-control-sm" value="#0d6efd">
-                </div>
-                <div class="col-6">
-                    <label class="small text-muted">Glow Color</label>
-                    <input type="color" id="text-glow-color" class="form-control form-control-sm" value="#66b2ff">
-                </div>
-            </div>
-            <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="text-glow-toggle">
-                <label class="form-check-label small" for="text-glow-toggle">Enable Text Glow</label>
-            </div>
-            <button class="btn btn-sm btn-outline-primary draggable-btn" draggable="true" data-type="header">Drag Heading</button>
-            <button class="btn btn-sm btn-outline-secondary draggable-btn" draggable="true" data-type="paragraph">Drag Paragraph</button>
-        </div>
-
-        <div class="component-box">
-            <h6 class="fw-bold">2. Media & Links</h6>
-            <div class="mb-2">
-                <input type="text" id="media-img" class="form-control form-control-sm" value="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400" placeholder="Image URL">
-            </div>
-            <div class="mb-2">
-                <input type="text" id="media-link" class="form-control form-control-sm" value="https://toyhou.se" placeholder="Click Link URL">
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-6">
-                    <label class="small text-muted">Box Glow</label>
-                    <input type="color" id="box-glow-color" class="form-control form-control-sm" value="#0d6efd">
-                </div>
-                <div class="col-6">
-                    <label class="small text-muted">Radius (px)</label>
-                    <input type="number" id="img-radius" class="form-control form-control-sm" value="8">
-                </div>
-            </div>
-            <div class="form-check form-switch mb-2">
-                <input class="form-check-input" type="checkbox" id="box-glow-toggle">
-                <label class="form-check-label small" for="box-glow-toggle">Enable Neon Image Glow</label>
-            </div>
-            <button class="btn btn-sm btn-outline-primary draggable-btn" draggable="true" data-type="image-link">Drag Linked Image</button>
-        </div>
-
-        <div class="component-box">
-            <h6 class="fw-bold">3. Stat Table Creator</h6>
-            <div class="row g-2 mb-2">
-                <div class="col-6"><input type="text" id="table-k1" class="form-control form-control-sm" value="Species"></div>
-                <div class="col-6"><input type="text" id="table-v1" class="form-control form-control-sm" value="Tiefling"></div>
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-6"><input type="text" id="table-k2" class="form-control form-control-sm" value="Occuption"></div>
-                <div class="col-6"><input type="text" id="table-v2" class="form-control form-control-sm" value="Mage"></div>
-            </div>
-            <div class="row g-2 mb-2">
-                <div class="col-6"><input type="text" id="table-k3" class="form-control form-control-sm" value="Alignment"></div>
-                <div class="col-6"><input type="text" id="table-v3" class="form-control form-control-sm" value="Chaotic Good"></div>
-            </div>
-            <button class="btn btn-sm btn-outline-primary draggable-btn" draggable="true" data-type="table">Drag Custom Table</button>
-        </div>
-
-        <div class="component-box">
-            <h6 class="fw-bold">4. Layout Elements</h6>
-            <button class="btn btn-sm btn-outline-dark draggable-btn" draggable="true" data-type="accordion">Drag Accordion (Tab alternative)</button>
-            <button class="btn btn-sm btn-outline-dark draggable-btn" draggable="true" data-type="dropdown">Drag Toyhou.se Dropdown Menu</button>
-            <button class="btn btn-sm btn-outline-dark draggable-btn" draggable="true" data-type="two-col">Drag 2-Column Responsive Row</button>
-        </div>
+        <div class="component-bank-item" data-type="header">➕ Heading / Title</div>
+        <div class="component-bank-item" data-type="paragraph">➕ Paragraph Text</div>
+        <div class="component-bank-item" data-type="image">➕ Linked Image</div>
+        <div class="component-bank-item" data-type="table">➕ Stats Table</div>
+        <div class="component-bank-item" data-type="accordion">➕ Accordion Tabs</div>
+        <div class="component-bank-item" data-type="dropdown">➕ Dropdown Navigation</div>
+        <div class="component-bank-item" data-type="columns">➕ 2 Column Layout</div>
     </div>
 
-    <div class="main-content">
+    <div class="main-content pad-bottom">
         <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2 class="fw-bold m-0">Live Workspace Canvas</h2>
-            <div>
-                <button id="clear-btn" class="btn btn-outline-danger">Reset Canvas</button>
-            </div>
+            <h2 class="fw-bold m-0">Canvas Editor</h2>
+            <button id="clear-btn" class="btn btn-sm btn-outline-danger">Clear All</button>
         </div>
 
         <div id="workspace" class="workspace mb-4"></div>
 
-        <div class="text-center mb-5">
-            <button id="generate-btn" class="btn btn-success btn-lg px-5 shadow">Compile & Generate Code</button>
+        <div class="text-center mb-4">
+            <button id="generate-btn" class="btn btn-success btn-lg px-5 shadow">Generate Code</button>
         </div>
 
         <div class="card d-none shadow-sm mb-5" id="output-card">
-            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center py-3">
-                <span class="fw-bold">Generated HTML (Paste directly into Toyhou.se Code Editor)</span>
-                <button id="copy-btn" class="btn btn-sm btn-primary">Copy to Clipboard</button>
+            <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+                <span class="fw-bold">Toyhou.se Copy-Paste Output</span>
+                <button id="copy-btn" class="btn btn-sm btn-primary">Copy Code</button>
             </div>
             <div class="card-body p-0">
-                <textarea id="code-output" class="form-control font-monospace border-0 p-3" rows="12" style="resize: vertical; background-color: #2b2b2b; color: #f8f8f2;" readonly></textarea>
+                <textarea id="code-output" class="form-control font-monospace border-0 p-3" rows="10" style="background-color: #2b2b2b; color: #f8f8f2;" readonly></textarea>
+            </div>
+        </div>
+    </div>
+
+    <div class="inspector-panel" id="inspector">
+        <div id="inspector-default" class="inspector-empty">
+            Tap an added element in your workspace to customize its text, colors, imagery, and glow properties.
+        </div>
+        <div id="inspector-form" class="d-none">
+            <h5 class="fw-bold text-dark mb-3" id="inspect-element-title">Edit Element</h5>
+            <div class="row g-3">
+                <div class="col-md-4 inspector-field" id="field-group-text">
+                    <label class="form-label small fw-bold">Element Content Text</label>
+                    <input type="text" id="inspect-text" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4 inspector-field" id="field-group-image">
+                    <label class="form-label small fw-bold">Image Source URL</label>
+                    <input type="text" id="inspect-image" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-4 inspector-field" id="field-group-link">
+                    <label class="form-label small fw-bold">Click Destination Link URL</label>
+                    <input type="text" id="inspect-link" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2 inspector-field" id="field-group-color">
+                    <label class="form-label small fw-bold">Text Color</label>
+                    <input type="color" id="inspect-color" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2 inspector-field" id="field-group-glow-color">
+                    <label class="form-label small fw-bold">Glow Aura Color</label>
+                    <input type="color" id="inspect-glow-color" class="form-control form-control-sm">
+                </div>
+                <div class="col-md-2 d-flex align-items-end inspector-field" id="field-group-glow-toggle">
+                    <div class="form-check form-switch mb-2">
+                        <input class="form-check-input" type="checkbox" id="inspect-glow-active">
+                        <label class="form-check-label small" for="inspect-glow-active">Apply Glow Effect</label>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script>
         const workspace = document.getElementById('workspace');
+        const inspectorDefault = document.getElementById('inspector-default');
+        const inspectorForm = document.getElementById('inspector-form');
         const generateBtn = document.getElementById('generate-btn');
         const clearBtn = document.getElementById('clear-btn');
         const outputCard = document.getElementById('output-card');
         const codeOutput = document.getElementById('code-output');
         const copyBtn = document.getElementById('copy-btn');
 
-        let activeDragType = null;
+        // Dynamic Active Selection Trackers
+        let selectedItem = null;
 
-        // Initialize Drag and Drop Listeners safely
-        document.querySelectorAll('.draggable-btn').forEach(btn => {
-            btn.addEventListener('dragstart', (e) => {
-                activeDragType = e.target.getAttribute('data-type');
+        // Content Structure Templates (NO FLEX GAP)
+        const elementTemplates = {
+            'header': `<h1 class="display-5 my-2 custom-target" style="color: #0d6efd;">Click to Edit Title Text</h1>`,
+            'paragraph': `<p class="my-2 text-muted custom-target" style="line-height: 1.6;">Click here to edit this paragraph chunk. You can write your character traits, description, or historical lore details.</p>`,
+            'image': `<div class="my-2 text-center"><a href="https://toyhou.se" target="_blank" class="link-target"><img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=400" class="img-fluid custom-target" style="max-height: 300px; border-radius: 8px;" alt="Asset"></a></div>`,
+            'table': `
+                <table class="table table-sm table-borderless my-2 custom-target">
+                    <tbody>
+                        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);"><td class="fw-bold py-2 label-color">Name</td><td class="py-2 text-muted val-text">Character</td></tr>
+                        <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);"><td class="fw-bold py-2 label-color">Age</td><td class="py-2 text-muted val-text">Unknown</td></tr>
+                        <tr><td class="fw-bold py-2 label-color">Status</td><td class="py-2 text-muted val-text">Active</td></tr>
+                    </tbody>
+                </table>`,
+            'accordion': `
+                <div class="accordion my-2 custom-target" id="ACC_ID">
+                    <div class="accordion-item">
+                        <h2 class="accordion-header"><button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#C1_ID">Section 1: Details</button></h2>
+                        <div id="C1_ID" class="accordion-collapse collapse show" data-bs-parent="#ACC_ID"><div class="accordion-body text-muted">Tap item and use input configurations below to edit details.</div></div>
+                    </div>
+                </div>`,
+            'dropdown': `
+                <div class="dropdown my-2 custom-target">
+                    <button class="btn btn-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">Navigation Menu</button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="#">Gallery Link</a></li>
+                        <li><a class="dropdown-item" href="#">Literature Hub</a></li>
+                    </ul>
+                </div>`,
+            'columns': `
+                <div class="row my-1 custom-target">
+                    <div class="col-md-6 my-2"><div class="p-3 border bg-light rounded">Left Structural Column Grid</div></div>
+                    <div class="col-md-6 my-2"><div class="p-3 border bg-light rounded">Right Structural Column Grid</div></div>
+                </div>`
+        };
+
+        // 1. ADD ELEMENT EVENT (Touch / Click Compatible)
+        document.querySelectorAll('.component-bank-item').forEach(item => {
+            item.addEventListener('click', () => {
+                const type = item.getAttribute('data-type');
+                const randId = 'th-' + Math.floor(Math.random() * 100000);
+                
+                // Process unique internal framework values for toggles like Accordions safely
+                let cleanRawHtml = elementTemplates[type]
+                    .replace(/ACC_ID/g, 'acc-' + randId)
+                    .replace(/C1_ID/g, 'coll-' + randId);
+
+                // Build item architecture inside workspace layout canvas
+                const wrapper = document.createElement('div');
+                wrapper.className = 'workspace-item';
+                wrapper.setAttribute('data-element-type', type);
+                wrapper.innerHTML = `
+                    <div class="item-actions">
+                        <button class="btn btn-sm btn-dark action-btn move-up-btn">↑</button>
+                        <button class="btn btn-sm btn-dark action-btn move-down-btn">↓</button>
+                        <button class="btn btn-sm btn-danger action-btn delete-item-btn">×</button>
+                    </div>
+                    ${cleanRawHtml}
+                `;
+                
+                workspace.appendChild(wrapper);
+                attachWorkspaceItemListeners(wrapper);
+                wrapper.click(); // Auto-select added block
             });
         });
 
-        workspace.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
+        // 2. WORKSPACE INTERACTION & SORTING LISTENERS
+        function attachWorkspaceItemListeners(item) {
+            item.addEventListener('click', (e) => {
+                // Ignore click paths specifically striking utility adjustment triggers
+                if (e.target.classList.contains('action-btn')) return;
 
-        workspace.addEventListener('dragenter', () => {
-            workspace.classList.add('drag-over');
-        });
+                document.querySelectorAll('.workspace-item').forEach(el => el.classList.remove('selected'));
+                item.classList.add('selected');
+                selectedItem = item;
+                openInspector(item);
+            });
 
-        workspace.addEventListener('dragleave', () => {
-            workspace.classList.remove('drag-over');
-        });
-
-        workspace.addEventListener('drop', (e) => {
-            e.preventDefault();
-            workspace.classList.remove('drag-over');
-            
-            if (activeDragType) {
-                const htmlContent = createComponentHTML(activeDragType);
-                if (htmlContent) {
-                    workspace.insertAdjacentHTML('beforeend', htmlContent);
+            // Reordering up/down mechanisms optimized to avoid dragging issues completely
+            item.querySelector('.move-up-btn').addEventListener('click', () => {
+                if (item.previousElementSibling) {
+                    workspace.insertBefore(item, item.previousElementSibling);
                 }
+            });
+            item.querySelector('.move-down-btn').addEventListener('click', () => {
+                if (item.nextElementSibling) {
+                    workspace.insertBefore(item.nextElementSibling, item);
+                }
+            });
+            item.querySelector('.delete-item-btn').addEventListener('click', () => {
+                item.remove();
+                closeInspector();
+            });
+        }
+
+        // 3. SELECTION INSPECTOR SYNC
+        function openInspector(item) {
+            const type = item.getAttribute('data-element-type');
+            inspectorDefault.classList.add('d-none');
+            inspectorForm.classList.remove('d-none');
+            document.getElementById('inspect-element-title').textContent = `Modify ${type.toUpperCase()} Attributes`;
+
+            // Hide fields by default, show selectively based on node type
+            document.querySelectorAll('.inspector-field').forEach(f => f.classList.add('d-none'));
+
+            const target = item.querySelector('.custom-target');
+
+            if (type === 'header' || type === 'paragraph') {
+                document.getElementById('field-group-text').classList.remove('d-none');
+                document.getElementById('field-group-color').classList.remove('d-none');
+                document.getElementById('field-group-glow-color').classList.remove('d-none');
+                document.getElementById('field-group-glow-toggle').classList.remove('d-none');
+
+                document.getElementById('inspect-text').value = target.textContent;
+                document.getElementById('inspect-color').value = rgbToHex(target.style.color || '#000000');
+                document.getElementById('inspect-glow-active').checked = target.style.textShadow !== '';
+            } 
+            else if (type === 'image') {
+                document.getElementById('field-group-image').classList.remove('d-none');
+                document.getElementById('field-group-link').classList.remove('d-none');
+                document.getElementById('field-group-glow-color').classList.remove('d-none');
+                document.getElementById('field-group-glow-toggle').classList.remove('d-none');
+
+                document.getElementById('inspect-image').value = target.src;
+                document.getElementById('inspect-link').value = item.querySelector('.link-target').href;
+                document.getElementById('inspect-glow-active').checked = target.style.boxShadow !== '';
             }
-        });
-
-        // Dynamic Component String Builder
-        function createComponentHTML(type) {
-            // Configuration states
-            const textVal = document.getElementById('text-content').value;
-            const textColor = document.getElementById('text-color').value;
-            const textGlowColor = document.getElementById('text-glow-color').value;
-            const useTextGlow = document.getElementById('text-glow-toggle').checked;
-            
-            const imgUrl = document.getElementById('media-img').value;
-            const linkUrl = document.getElementById('media-link').value;
-            const boxGlowColor = document.getElementById('box-glow-color').value;
-            const useBoxGlow = document.getElementById('box-glow-toggle').checked;
-            const imgRadius = document.getElementById('img-radius').value;
-
-            // Neon CSS properties computed safely without framework code lines
-            const textGlowStyle = useTextGlow ? `text-shadow: 0 0 10px ${textGlowColor}, 0 0 20px ${textGlowColor};` : '';
-            const boxGlowStyle = useBoxGlow ? `box-shadow: 0 0 15px ${boxGlowColor};` : '';
-
-            // Unique IDs generation for functional Bootstrap elements like Accordions/Dropdowns
-            const uniqueId = 'th-' + Math.floor(Math.random() * 100000);
-
-            const baseWrapperOpen = `<div class="workspace-item"><button class="btn btn-danger btn-sm delete-btn" onclick="this.parentElement.remove()">×</button>`;
-            const baseWrapperClose = `</div>`;
-
-            switch(type) {
-                case 'header':
-                    return `${baseWrapperOpen}<h1 class="display-5 my-3" style="color: ${textColor}; ${textGlowStyle}">${textVal}</h1>${baseWrapperClose}`;
-                
-                case 'paragraph':
-                    return `${baseWrapperOpen}<p class="my-3 text-muted" style="line-height: 1.6;">Add detailed backstory paragraphs here. Toyhou.se handles standard HTML line-breaks nicely inside clean elements.</p>${baseWrapperClose}`;
-                
-                case 'image-link':
-                    return `${baseWrapperOpen}
-                        <div class="my-3 text-center">
-                            <a href="${linkUrl}" target="_blank">
-                                <img src="${imgUrl}" class="img-fluid" style="border-radius: ${imgRadius}px; max-height: 350px; ${boxGlowStyle}" alt="Character Asset">
-                            </a>
-                        </div>
-                    ${baseWrapperClose}`;
-
-                case 'table':
-                    const k1 = document.getElementById('table-k1').value; const v1 = document.getElementById('table-v1').value;
-                    const k2 = document.getElementById('table-k2').value; const v2 = document.getElementById('table-v2').value;
-                    const k3 = document.getElementById('table-k3').value; const v3 = document.getElementById('table-v3').value;
-                    return `${baseWrapperOpen}
-                        <table class="table table-sm table-borderless my-3">
-                            <tbody>
-                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                                    <td class="fw-bold py-2" style="width: 40%; color: ${textColor};">${k1}</td>
-                                    <td class="py-2 text-muted">${v1}</td>
-                                </tr>
-                                <tr style="border-bottom: 1px solid rgba(0,0,0,0.05);">
-                                    <td class="fw-bold py-2" style="color: ${textColor};">${k2}</td>
-                                    <td class="py-2 text-muted">${v2}</td>
-                                </tr>
-                                <tr>
-                                    <td class="fw-bold py-2" style="color: ${textColor};">${k3}</td>
-                                    <td class="py-2 text-muted">${v3}</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    ${baseWrapperClose}`;
-
-                case 'accordion':
-                    return `${baseWrapperOpen}
-                        <div class="accordion my-3" id="accordion-${uniqueId}">
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne-${uniqueId}">
-                                        Section 1: Personality
-                                    </button>
-                                </h2>
-                                <div id="collapseOne-${uniqueId}" class="accordion-collapse collapse show" data-bs-parent="#accordion-${uniqueId}">
-                                    <div class="accordion-body text-muted">Insert specific behavioral attributes and descriptive personality breakdowns here.</div>
-                                </div>
-                            </div>
-                            <div class="accordion-item">
-                                <h2 class="accordion-header">
-                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseTwo-${uniqueId}">
-                                        Section 2: Trivia & Notes
-                                    </button>
-                                </h2>
-                                <div id="collapseTwo-${uniqueId}" class="accordion-collapse collapse" data-bs-parent="#accordion-${uniqueId}">
-                                    <div class="accordion-body text-muted">List trivia facts, design preferences, likes, or dislikes cleanly inside this drop panel.</div>
-                                </div>
-                            </div>
-                        </div>
-                    ${baseWrapperClose}`;
-
-                case 'dropdown':
-                    return `${baseWrapperOpen}
-                        <div class="dropdown my-3">
-                            <button class="btn btn-secondary dropdown-toggle" type="button" id="drop-${uniqueId}" data-bs-toggle="dropdown" aria-expanded="false">
-                                Quick Links Navigation
-                            </button>
-                            <ul class="dropdown-menu" aria-labelledby="drop-${uniqueId}">
-                                <li><a class="dropdown-menu-item p-2 d-block text-dark text-decoration-none" href="#">Sub-Gallery</a></li>
-                                <li><a class="dropdown-menu-item p-2 d-block text-dark text-decoration-none" href="#">Literature Hub</a></li>
-                                <li><hr class="dropdown-divider"></li>
-                                <li><a class="dropdown-menu-item p-2 d-block text-danger text-decoration-none" href="#">Design Credits</a></li>
-                            </ul>
-                        </div>
-                    ${baseWrapperClose}`;
-
-                case 'two-col':
-                    return `${baseWrapperOpen}
-                        <div class="row my-2">
-                            <div class="col-md-6 my-2">
-                                <div class="p-3 border rounded-3 bg-light">Left Column Container Asset</div>
-                            </div>
-                            <div class="col-md-6 my-2">
-                                <div class="p-3 border rounded-3 bg-light">Right Column Container Asset</div>
-                            </div>
-                        </div>
-                    ${baseWrapperClose}`;
-                
-                default: 
-                    return '';
+            else if (type === 'table') {
+                document.getElementById('field-group-color').classList.remove('d-none');
+                // Tables can customize label colors safely
+                const labelSample = target.querySelector('.label-color');
+                document.getElementById('inspect-color').value = rgbToHex(labelSample ? labelSample.style.color : '#000000');
             }
         }
 
-        // Toyhou.se Compiler Engine
+        function closeInspector() {
+            selectedItem = null;
+            inspectorDefault.classList.remove('d-none');
+            inspectorForm.classList.add('d-none');
+        }
+
+        // 4. MULTI-INPUT FIELD MUTATOR ENGINE
+        function updateSelectedElement() {
+            if (!selectedItem) return;
+            const type = selectedItem.getAttribute('data-element-type');
+            const target = selectedItem.querySelector('.custom-target');
+
+            const textVal = document.getElementById('inspect-text').value;
+            const imgVal = document.getElementById('inspect-image').value;
+            const linkVal = document.getElementById('inspect-link').value;
+            const colorVal = document.getElementById('inspect-color').value;
+            const glowColorVal = document.getElementById('inspect-glow-color').value;
+            const isGlowActive = document.getElementById('inspect-glow-active').checked;
+
+            if (type === 'header' || type === 'paragraph') {
+                target.textContent = textVal;
+                target.style.color = colorVal;
+                target.style.textShadow = isGlowActive ? `0 0 8px ${glowColorVal}, 0 0 15px ${glowColorVal}` : '';
+            } 
+            else if (type === 'image') {
+                target.src = imgVal;
+                selectedItem.querySelector('.link-target').href = linkVal;
+                target.style.boxShadow = isGlowActive ? `0 0 15px ${glowColorVal}` : '';
+            }
+            else if (type === 'table') {
+                selectedItem.querySelectorAll('.label-color').forEach(cell => {
+                    cell.style.color = colorVal;
+                });
+            }
+        }
+
+        // Bind mutation runtime loops directly to window input changes
+        ['input', 'change'].forEach(evtName => {
+            document.getElementById('inspector-form').addEventListener(evtName, updateSelectedElement);
+        });
+
+        // 5. TOYHOU.SE CODE COMPILER SYSTEM (Zero Gap Compliance)
         generateBtn.addEventListener('click', () => {
             const clone = workspace.cloneNode(true);
-            
-            // Remove application UI builders instantly
-            clone.querySelectorAll('.delete-btn').forEach(btn => btn.remove());
+            clone.querySelectorAll('.item-actions').forEach(el => el.remove());
 
-            const structuralElements = clone.querySelectorAll('.workspace-item');
-            let cleanlyCompiledHTML = '';
+            const workspaceItems = clone.querySelectorAll('.workspace-item');
+            let compiledCodeOutput = '';
 
-            structuralElements.forEach(item => {
-                item.removeAttribute('class'); // clear internal workspace helpers
-                cleanlyCompiledHTML += item.innerHTML.trim() + '\n';
+            workspaceItems.forEach(item => {
+                // Strips developer helper container definitions cleanly
+                item.removeAttribute('class');
+                item.removeAttribute('data-element-type');
+                compiledCodeOutput += item.innerHTML.trim() + '\n';
             });
 
-            if (cleanlyCompiledHTML.trim() === '') {
-                alert('Add components to the workspace first!');
+            if (compiledCodeOutput.trim() === '') {
+                alert('Add elements to your layout canvas before compiling!');
                 return;
             }
 
-            // Wrap compiled output in a clean layout profile container wrapper (No Gap)
-            const targetedOutput = `<div class="container-fluid p-2">\n${cleanlyCompiledHTML}</div>`;
-            
-            codeOutput.value = targetedOutput;
+            const cleanWrappedLayout = `<div class="container-fluid p-1">\n${compiledCodeOutput}</div>`;
+            codeOutput.value = cleanWrappedLayout;
             outputCard.classList.remove('d-none');
             outputCard.scrollIntoView({ behavior: 'smooth' });
         });
 
-        // Clear State
-        clearBtn.addEventListener('click', () => {
-            if(confirm('Wipe canvas workspace layout clean?')) {
-                workspace.innerHTML = '';
-                outputCard.classList.add('d-none');
-            }
-        });
-
-        // Copy Engine
-        copyBtn.addEventListener('click', () => {
-            codeOutput.select();
-            navigator.clipboard.writeText(codeOutput.value);
-            copyBtn.textContent = 'Copied Code!';
-            copyBtn.className = 'btn btn-sm btn-success';
-            setTimeout(() => {
-                copyBtn.textContent = 'Copy to Clipboard';
-                copyBtn.className = 'btn btn-sm btn-primary';
-            }, 2000);
-        });
+        // Utilities
+        clearBtn.addEventListener('click', () => { if(confirm('Wipe layout?')) { workspace.innerHTML = ''; closeInspector(); outputCard.classList.add('d-none'); } });
+        copyBtn.addEventListener('click', () => { codeOutput.select(); navigator.clipboard.writeText(codeOutput.value); copyBtn.textContent = 'Copied!'; setTimeout(() => copyBtn.textContent = 'Copy Code', 2000); });
+        function rgbToHex(rgb) { if(!rgb || !rgb.includes('rgb')) return rgb; let a = rgb.split("(")[1].split(")")[0].split(","); return "#" + ((1 << 24) + (parseInt(a[0]) << 16) + (parseInt(a[1]) << 8) + parseInt(a[2])).toString(16).slice(1); }
     </script>
 </body>
 </html>
