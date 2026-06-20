@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Toyhou.se Layout Builder</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+    <style>
+        body {
+            background-color: #f8f9fa;
+        }
+        /* Sidebar styling */
+        .sidebar {
+            height: 100vh;
+            position: sticky;
+            top: 0;
+            overflow-y: auto;
+            background: #fff;
+            border-right: 1px solid #dee2e6;
+        }
+        .component-card {
+            cursor: grab;
+            transition: all 0.2s;
+        }
+        .component-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        /* Workspace styling */
+        .workspace-container {
+            min-height: 70vh;
+            background: #fff;
+            border: 2px dashed #6c757d;
+            border-radius: 8px;
+        }
+        .workspace-container:empty::before {
+            content: "Drag and drop layout blocks or components here...";
+            display: block;
+            color: #6c757d;
+            text-align: center;
+            padding-top: 10rem;
+            font-style: italic;
+        }
+        /* Highlight drop zones */
+        .drag-over {
+            border-color: #0d6efd !important;
+            background-color: rgba(13, 110, 253, 0.05) !important;
+        }
+        /* Builder view item wrappers */
+        .built-item {
+            position: relative;
+            margin-bottom: 1rem;
+            border: 1px dashed rgba(0,0,0,0.1);
+            padding: 10px;
+        }
+        .built-item:hover {
+            border-color: #0d6efd;
+        }
+        .delete-btn {
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            z-index: 1000;
+            display: none;
+        }
+        .built-item:hover .delete-btn {
+            display: block;
+        }
+        /* Preview formatting matching TH restrictions (No Gap!) */
+        .th-row {
+            display: flex;
+            flex-wrap: wrap;
+            margin-right: -15px;
+            margin-left: -15px;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-3 col-lg-2 d-md-block sidebar p-3">
+            <h5 class="mb-3 pb-2 border-bottom"><i class="fa-solid fa-cubes"></i> Elements</h5>
+            
+            <p class="text-muted small fw-bold mb-2">LAYOUT STRUCUTRES</p>
+            <div class="card component-card p-3 mb-2 bg-light text-dark" draggable="true" data-type="row-2">
+                <i class="fa-solid fa-columns mb-1"></i> 2-Column Row
+            </div>
+            <div class="card component-card p-3 mb-2 bg-light text-dark" draggable="true" data-type="row-3">
+                <i class="fa-solid fa-table-columns mb-1"></i> 3-Column Row
+            </div>
+
+            <p class="text-muted small fw-bold mt-4 mb-2">COMPONENTS</p>
+            <div class="card component-card p-3 mb-2 bg-light text-dark" draggable="true" data-type="th-card">
+                <i class="fa-regular fa-id-card mb-1"></i> Character Info Card
+            </div>
+            <div class="card component-card p-3 mb-2 bg-light text-dark" draggable="true" data-type="th-alert">
+                <i class="fa-solid fa-circle-exclamation mb-1"></i> Warning Box (Alert)
+            </div>
+            <div class="card component-card p-3 mb-2 bg-light text-dark" draggable="true" data-type="th-progress">
+                <i class="fa-solid fa-bars-progress mb-1"></i> Stat/Progress Bar
+            </div>
+        </nav>
+
+        <main class="col-md-9 ms-sm-auto col-lg-10 px-md-4 py-4">
+            <div class="d-flex justify-content-between flex-wrap flex-md-nowrap align-items-center pt-3 pb-2 mb-3 border-bottom">
+                <h1 class="h2">Toyhou.se Code Builder</h1>
+                <button class="btn btn-danger btn-sm" onclick="clearWorkspace()"><i class="fa-solid fa-trash-can"></i> Clear All</button>
+            </div>
+
+            <h5 class="text-secondary mb-2">Workspace Canvas</h5>
+            <div id="workspace" class="workspace-container p-3 mb-4"></div>
+
+            <div class="text-center mb-4">
+                <button class="btn btn-primary btn-lg px-5" onclick="generateCode()">
+                    <i class="fa-solid fa-code me-2"></i> Generate Toyhou.se Code
+                </button>
+            </div>
+
+            <div class="card mb-5">
+                <div class="card-header d-flex justify-content-between align-items-center bg-dark text-white">
+                    <span class="fw-bold"><i class="fa-solid fa-terminal me-2"></i> Clean HTML Output (No Gaps)</span>
+                    <button class="btn btn-outline-light btn-sm" onclick="copyToClipboard()">
+                        <i class="fa-regular fa-copy me-1"></i> Copy Code
+                    </button>
+                </div>
+                <div class="card-body p-0">
+                    <textarea id="output-code" class="form-control font-monospace p-3 bg-light text-dark" rows="10" readonly placeholder="Your generated code will appear here..."></textarea>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+    const workspace = document.getElementById('workspace');
+    const cards = document.querySelectorAll('.component-card');
+    let draggedType = null;
+
+    // Component HTML Blueprints (Using explicit standard margins instead of modern gap property)
+    const blueprints = {
+        'row-2': `
+            <div class="th-row mb-3">
+                <div class="col-md-6" style="padding-right: 15px; padding-left: 15px; margin-bottom: 15px;">
+                    <div style="background: #f1f1f1; padding: 15px; border-radius: 4px; min-height: 80px;">Left Column (Replace or Drop Elements Here)</div>
+                </div>
+                <div class="col-md-6" style="padding-right: 15px; padding-left: 15px; margin-bottom: 15px;">
+                    <div style="background: #f1f1f1; padding: 15px; border-radius: 4px; min-height: 80px;">Right Column (Replace or Drop Elements Here)</div>
+                </div>
+            </div>`,
+        'row-3': `
+            <div class="th-row mb-3">
+                <div class="col-md-4" style="padding-right: 15px; padding-left: 15px; margin-bottom: 15px;">
+                    <div style="background: #f1f1f1; padding: 15px; border-radius: 4px; min-height: 80px;">Column 1</div>
+                </div>
+                <div class="col-md-4" style="padding-right: 15px; padding-left: 15px; margin-bottom: 15px;">
+                    <div style="background: #f1f1f1; padding: 15px; border-radius: 4px; min-height: 80px;">Column 2</div>
+                </div>
+                <div class="col-md-4" style="padding-right: 15px; padding-left: 15px; margin-bottom: 15px;">
+                    <div style="background: #f1f1f1; padding: 15px; border-radius: 4px; min-height: 80px;">Column 3</div>
+                </div>
+            </div>`,
+        'th-card': `
+            <div class="card p-3 mb-3" style="background-color: #ffffff; border: 1px solid #dee2e6; border-radius: .25rem;">
+                <h4 class="card-title text-primary" style="margin-bottom: .75rem;">Character Name</h4>
+                <p class="card-text text-muted" style="margin-bottom: 0;">Age: 21 | Species: Human | Status: Active</p>
+            </div>`,
+        'th-alert': `
+            <div class="alert alert-warning p-3 mb-3" style="border-radius: .25rem; background-color: #fff3cd; border: 1px solid #ffeeba; color: #856404;">
+                <i class="fa-solid fa-triangle-exclamation mr-2"></i> <strong>Notice:</strong> Do not steal or trace this design.
+            </div>`,
+        'th-progress': `
+            <div class="mb-3">
+                <div class="d-flex justify-content-between mb-1" style="font-size: 85%;">
+                    <span>Intelligence</span>
+                    <span>75%</span>
+                </div>
+                <div class="progress" style="display: flex; height: 1rem; overflow: hidden; font-size: .75rem; background-color: #e9ecef; border-radius: .25rem;">
+                    <div class="progress-bar bg-info" style="width: 75%; display: flex; flex-direction: column; justify-content: center; overflow: hidden; color: #fff; text-align: center; white-space: nowrap; background-color: #17a2b8; transition: width .6s ease;" role="progressbar"></div>
+                </div>
+            </div>`
+    };
+
+    // Drag and Drop Logic
+    cards.forEach(card => {
+        card.addEventListener('dragstart', (e) => {
+            draggedType = e.target.getAttribute('data-type');
+        });
+    });
+
+    workspace.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        workspace.classList.add('drag-over');
+    });
+
+    workspace.addEventListener('dragleave', () => {
+        workspace.classList.remove('drag-over');
+    });
+
+    workspace.addEventListener('drop', (e) => {
+        e.preventDefault();
+        workspace.classList.remove('drag-over');
+        
+        if (draggedType && blueprints[draggedType]) {
+            // Create item wrapper with active delete button for interface UI
+            const wrapper = document.createElement('div');
+            wrapper.className = 'built-item';
+            wrapper.innerHTML = `
+                <button class="btn btn-danger btn-sm delete-btn" onclick="this.parentElement.remove()"><i class="fa-solid fa-xmark"></i></button>
+                <div class="component-payload">${blueprints[draggedType]}</div>
+            `;
+            workspace.appendChild(wrapper);
+        }
+    });
+
+    // Clear Workspace function
+    function clearWorkspace() {
+        if(confirm("Are you sure you want to wipe the current layout canvas?")) {
+            workspace.innerHTML = '';
+            document.getElementById('output-code').value = '';
+        }
+    }
+
+    // Code Generator Engine
+    function generateCode() {
+        const payloads = workspace.querySelectorAll('.component-payload');
+        let finalHTML = `\n<div class="container p-0">\n`;
+        
+        payloads.forEach(payload => {
+            // Normalize internal markup, making sure elements are translated flawlessly 
+            let rawChunk = payload.innerHTML.trim();
+            
+            // Clean up custom view class hooks back to standard Bootstrap 4 rows for Toyhou.se compatibility
+            rawChunk = rawChunk.replace(/th-row/g, 'row');
+            
+            finalHTML += "    " + rawChunk + "\n";
+        });
+        
+        finalHTML += `</div>`;
+        
+        document.getElementById('output-code').value = finalHTML;
+    }
+
+    // Clipboard Copy Utility
+    function copyToClipboard() {
+        const codeArea = document.getElementById('output-code');
+        if (!codeArea.value) {
+            alert("Generate some code first!");
+            return;
+        }
+        codeArea.select();
+        codeArea.setSelectionRange(0, 99999); // Mobile compatibility
+        navigator.clipboard.writeText(codeArea.value);
+        alert("Code copied directly to your clipboard! Ready to paste into Toyhou.se.");
+    }
+</script>
+
+</body>
+</html>
