@@ -2,12 +2,13 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Toyhou.se Ultimate Infinite Studio</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #1a1d20; color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; overflow: hidden; user-select: none; }
+        /* FIXED: Removed user-select none and touch-action overrides that locked the screen */
+        body { background-color: #1a1d20; color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; overflow: hidden; }
         
         .app-container { display: flex; height: 100vh; position: relative; }
         
@@ -35,7 +36,7 @@
         .nested-dropzone { min-height: 50px; border: 1px dashed rgba(255, 255, 255, 0.1); border-radius: 4px; padding: 8px; margin-top: 8px; background: rgba(0,0,0,0.2); position: relative; }
         
         /* Interactive Drag & Resize Node Box Wrap */
-        .w-item { position: relative; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; margin-bottom: 12px; padding: 14px; background: rgba(255,255,255,0.01); display: block; }
+        .w-item { position: relative; border: 1px solid rgba(255,255,255,0.08); border-radius: 6px; margin-bottom: 12px; padding: 14px; background: rgba(255,255,255,0.01); display: block; cursor: pointer; }
         .w-item.active-node { border-color: #0d6efd !important; background-color: rgba(13, 110, 253, 0.04); }
         
         /* Drag handle indicator */
@@ -47,15 +48,18 @@
         .act-btn { color: white; border: none; background: transparent; font-size: 0.7rem; margin: 0 3px; padding: 1px; cursor: pointer; }
         
         /* Touch Resizing Handles Squares on Corners */
-        .resize-handle { width: 10px; height: 10px; background-color: #0d6efd; border: 1px solid white; position: absolute; z-index: 1055; display: none; }
+        .resize-handle { width: 12px; height: 12px; background-color: #0d6efd; border: 1px solid white; position: absolute; z-index: 1055; display: none; }
         .w-item.active-node > .resize-handle { display: block; }
         
-        .resize-se { right: -5px; bottom: -5px; cursor: se-resize; }
-        .resize-e { right: -5px; top: calc(50% - 5px); cursor: e-resize; }
-        .resize-s { bottom: -5px; left: calc(50% - 5px); cursor: s-resize; }
+        .resize-se { right: -6px; bottom: -6px; cursor: se-resize; }
+        .resize-e { right: -6px; top: calc(50% - 6px); cursor: e-resize; }
+        .resize-s { bottom: -6px; left: calc(50% - 6px); cursor: s-resize; }
 
         .form-label-xs { font-size: 0.75rem; font-weight: 600; color: #adb5bd; margin-bottom: 3px; display: block; }
         .control-section { border-bottom: 1px solid #343a40; padding-bottom: 12px; margin-bottom: 12px; }
+        
+        /* Ensure form controls are explicitly interactive */
+        input, select, textarea, button { pointer-events: auto !important; }
     </style>
 </head>
 <body>
@@ -222,7 +226,7 @@
         let targetedActiveNode = null;
         let draggedBlueprintType = null;
 
-        // ALL original blueprints completely preserved and unified
+        // All original elements meticulously unified 
         const rawBlueprints = {
             'row': `<div class="row content-target-block mx-0 nested-dropzone"></div>`,
             'col-md-4': `<div class="col-md-4 mb-2 content-target-block nested-dropzone"></div>`,
@@ -248,7 +252,7 @@
             'lore-box': `<div class="border-start border-primary ps-3 my-2 content-target-block"><h6>Chronology History Timeline Log Marker</h6><p class="small text-muted mb-0">Enter timeline logs context parameters.</p></div>`
         };
 
-        // Drag handlers setup
+        // Drag configuration mapping
         document.querySelectorAll('.element-bank-item').forEach(item => {
             item.addEventListener('dragstart', (e) => {
                 draggedBlueprintType = item.getAttribute('data-type');
@@ -300,7 +304,7 @@
 
             node.addEventListener('click', (e) => {
                 e.stopPropagation();
-                if (e.target.closest('.w-item-actions')) return;
+                if (e.target.closest('.w-item-actions') || e.target.closest('.resize-handle')) return;
                 
                 document.querySelectorAll('.w-item').forEach(el => el.classList.remove('active-node'));
                 node.classList.add('active-node');
@@ -315,7 +319,7 @@
                 initDropzoneMechanics(nestedZone);
             });
 
-            // Multi-directional Resizing System
+            // Re-engineered Touch & Mouse Resizing Box Handles
             const handles = node.querySelectorAll('.resize-handle');
             handles.forEach(handle => {
                 handle.addEventListener('mousedown', initResizeEvent);
@@ -473,7 +477,7 @@
             linksList.appendChild(newLi);
         });
 
-        // Fullscreen Mode Toggle Link
+        // Fullscreen layout toggle logic
         document.getElementById('toggle-view-mode').addEventListener('click', () => {
             masterFrame.classList.toggle('fullscreen-mode');
             const btn = document.getElementById('toggle-view-mode');
@@ -488,7 +492,7 @@
 
         function clearInspectorPanel() { targetedActiveNode = null; inspectorPlaceholder.classList.remove('d-none'); inspectorControls.classList.add('d-none'); }
 
-        // Specialized recursive parser engine
+        // Markup extraction parsing logic
         document.getElementById('master-compile-btn').addEventListener('click', () => {
             const cleanExtract = (element) => {
                 let htmlOut = '';
