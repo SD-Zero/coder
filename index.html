@@ -3,81 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toyhou.se Clean Studio</title>
+    <title>Toyhou.se Infinite Layout Studio</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css" rel="stylesheet">
     <style>
-        body { background-color: #1a1d20; color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; }
+        body { background-color: #1a1d20; color: #f8f9fa; font-family: system-ui, -apple-system, sans-serif; margin: 0; padding: 0; overflow: hidden; }
         
-        /* Clear 3-Column Layout */
-        .app-container { display: flex; height: 100vh; overflow: hidden; }
+        .app-container { display: flex; height: 100vh; position: relative; }
         
-        .sidebar-left { width: 320px; background-color: #212529; border-right: 1px solid #343a40; overflow-y: auto; padding: 20px; flex-shrink: 0; }
-        .sidebar-right { width: 360px; background-color: #212529; border-left: 1px solid #343a40; overflow-y: auto; padding: 20px; flex-shrink: 0; }
-        .main-canvas-area { flex-grow: 1; overflow-y: auto; padding: 30px; background-color: #111416; }
+        /* Layout Panels */
+        .sidebar-left { width: 320px; background-color: #212529; border-right: 1px solid #343a40; overflow-y: auto; padding: 20px; flex-shrink: 0; transition: all 0.2s ease; }
+        .sidebar-right { width: 360px; background-color: #212529; border-left: 1px solid #343a40; overflow-y: auto; padding: 20px; flex-shrink: 0; transition: all 0.2s ease; }
+        .main-canvas-area { flex-grow: 1; overflow-y: auto; padding: 30px; background-color: #111416; transition: all 0.2s ease; position: relative; }
         
-        /* Component Elements Banks */
+        /* Full Screen Workspace States */
+        .app-container.fullscreen-mode .sidebar-left { margin-left: -320px; }
+        .app-container.fullscreen-mode .sidebar-right { margin-right: -360px; }
+        
+        /* Drawer Headers & Buttons */
         .category-header { background: #2c3034; padding: 6px 10px; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; color: #adb5bd; margin-top: 15px; border-radius: 4px; }
-        .element-bank-item { background: #2c3034; border: 1px solid #3d4246; border-radius: 6px; padding: 10px; margin-bottom: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; transition: all 0.15s; }
+        .element-bank-item { background: #2c3034; border: 1px solid #3d4246; border-radius: 6px; padding: 10px; margin-bottom: 6px; cursor: pointer; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; }
         .element-bank-item i { width: 24px; color: #0d6efd; }
         .element-bank-item:hover { background: #343a40; border-color: #4f555b; }
         
-        /* Canvas Workspace setup */
-        .workspace-viewport { background: #212529; border: 2px dashed #343a40; border-radius: 12px; padding: 25px; min-height: 450px; position: relative; }
-        .workspace-viewport:empty::before { content: "Tap an element on the left menu bank to append it to your layout canvas..."; color: #6c757d; display: block; text-align: center; line-height: 400px; font-style: italic; }
+        /* Infinite Nesting Dropspaces */
+        .nested-dropzone { min-height: 60px; border: 1px dashed rgba(255,255,255,0.1); border-radius: 6px; padding: 10px; margin-top: 10px; background: rgba(0,0,0,0.15); }
+        .nested-dropzone:empty::before { content: "Tap an element to nest inside here..."; font-size: 0.75rem; color: #6c757d; display: block; text-align: center; line-height: 40px; }
         
-        .w-item { position: relative; border: 2px solid transparent; border-radius: 6px; margin-bottom: 15px; padding: 5px; cursor: pointer; }
-        .w-item:hover { border-color: #495057; }
-        .w-item.active-node { border-color: #0d6efd; background-color: rgba(13, 110, 253, 0.04); }
+        /* Canvas Item Architecture */
+        .workspace-viewport { background: #212529; border: 2px dashed #343a40; border-radius: 12px; padding: 25px; min-height: 500px; }
+        .workspace-viewport:empty::before { content: "Tap layout rows, structural columns, or text objects on the left to start build loops..."; color: #6c757d; display: block; text-align: center; line-height: 450px; font-style: italic; }
         
-        /* Actions bars */
-        .w-item-actions { display: none; position: absolute; top: -14px; right: 10px; z-index: 1000; background: #0d6efd; border-radius: 4px; padding: 2px 6px; }
-        .w-item:hover .w-item-actions, .w-item.active-node .w-item-actions { display: flex; align-items: center; }
-        .act-btn { color: white; border: none; background: transparent; font-size: 0.75rem; margin: 0 4px; padding: 2px; cursor: pointer; }
+        .w-item { position: relative; border: 1px solid rgba(255,255,255,0.05); border-radius: 6px; margin-bottom: 10px; padding: 12px; background: rgba(255,255,255,0.01); }
+        .w-item.active-node { border-color: #0d6efd !important; background-color: rgba(13, 110, 253, 0.04); }
+        
+        /* Actions Overlay Bar */
+        .w-item-actions { display: none; position: absolute; top: -12px; right: 8px; z-index: 1050; background: #0d6efd; border-radius: 4px; padding: 1px 4px; }
+        .w-item:hover > .w-item-actions, .w-item.active-node > .w-item-actions { display: flex; align-items: center; }
+        .act-btn { color: white; border: none; background: transparent; font-size: 0.7rem; margin: 0 3px; padding: 1px; cursor: pointer; }
         
         .form-label-xs { font-size: 0.75rem; font-weight: 600; color: #adb5bd; margin-bottom: 3px; display: block; }
-        .control-section { border-bottom: 1px solid #343a40; padding-bottom: 15px; margin-bottom: 15px; }
+        .control-section { border-bottom: 1px solid #343a40; padding-bottom: 12px; margin-bottom: 12px; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
+    <div class="app-container" id="master-app-frame">
         <div class="sidebar-left">
-            <h5 class="fw-bold text-white mb-1"><i class="fa-solid fa-cubes text-primary me-2"></i>Elements</h5>
-            <p class="text-muted small mb-3">Tap an item to add it instantly to your canvas layout build.</p>
+            <h5 class="fw-bold text-white mb-1"><i class="fa-solid fa-code text-primary me-2"></i>Code Blocks</h5>
+            <p class="text-muted small mb-3">Elements target whatever container is currently selected/highlighted blue.</p>
             
-            <div id="tab-elements">
-                <div class="category-header">Structure Layouts</div>
-                <div class="element-bank-item" data-type="row-2"><i class="fa-solid fa-columns"></i>2 Column Row Grid</div>
-                <div class="element-bank-item" data-type="section-card"><i class="fa-solid fa-square"></i>Base Card Box</div>
-                <div class="element-bank-item" data-type="flex-row"><i class="fa-solid fa-arrows-left-right"></i>Flex Container</div>
+            <div>
+                <div class="category-header">Grid Framework</div>
+                <div class="element-bank-item" data-type="row"><i class="fa-solid fa-table-rows"></i>Bootstrap Row Block</div>
+                <div class="element-bank-item" data-type="col-md-4"><i class="fa-solid fa-columns"></i>Column (Size 4 / One-Third)</div>
+                <div class="element-bank-item" data-type="col-md-6"><i class="fa-solid fa-columns"></i>Column (Size 6 / Half Width)</div>
+                <div class="element-bank-item" data-type="col-md-8"><i class="fa-solid fa-columns"></i>Column (Size 8 / Two-Thirds)</div>
+                <div class="element-bank-item" data-type="col-md-12"><i class="fa-solid fa-square"></i>Column (Size 12 / Full Width)</div>
 
-                <div class="category-header">Typography</div>
-                <div class="element-bank-item" data-type="header-node"><i class="fa-solid fa-heading"></i>Styled Title Heading</div>
-                <div class="element-bank-item" data-type="para-node"><i class="fa-solid fa-font"></i>Paragraph Block</div>
-                <div class="element-bank-item" data-type="badge-list"><i class="fa-solid fa-tags"></i>Status Badges Panel</div>
+                <div class="category-header">Freeform Blocks</div>
+                <div class="element-bank-item" data-type="div-box"><i class="fa-solid fa-box-open"></i>Generic Div Box</div>
+                <div class="element-bank-item" data-type="header-node"><i class="fa-solid fa-heading"></i>Heading Text Element</div>
+                <div class="element-bank-item" data-type="para-node"><i class="fa-solid fa-align-left"></i>Paragraph Text Element</div>
+                <div class="element-bank-item" data-type="img-plain"><i class="fa-regular fa-image"></i>Standard Image Box</div>
 
-                <div class="category-header">Media System</div>
-                <div class="element-bank-item" data-type="img-linked"><i class="fa-regular fa-image"></i>Linked Profile Image</div>
-
-                <div class="category-header">Interactive widgets</div>
-                <div class="element-bank-item" data-type="tabs-group"><i class="fa-solid fa-folder-open"></i>Content Navigation Tabs</div>
-                <div class="element-bank-item" data-type="accordion-group"><i class="fa-solid fa-bars-staggered"></i>Accordion Item Panels</div>
-                <div class="element-bank-item" data-type="progress-fill"><i class="fa-solid fa-battery-half"></i>Stat Progress Bar</div>
-
-                <div class="category-header">Character Sheet Layouts</div>
-                <div class="element-bank-item" data-type="stat-table"><i class="fa-solid fa-table-list"></i>Detailed Vitals Table</div>
-                <div class="element-bank-item" data-type="relation-card"><i class="fa-solid fa-heart"></i>Relationship Block Link</div>
-                <div class="element-bank-item" data-type="lore-box"><i class="fa-solid fa-book-open"></i>Lore Timeline Section</div>
+                <div class="category-header">Complex Widgets</div>
+                <div class="element-bank-item" data-type="tab-container"><i class="fa-solid fa-folder-open"></i>Dynamic Tab Group</div>
+                <div class="element-bank-item" data-type="accordion-node"><i class="fa-solid fa-bars-staggered"></i>Accordion Collapsible</div>
+                <div class="element-bank-item" data-type="progress-fill"><i class="fa-solid fa-battery-half"></i>Stat Progress Tracker</div>
             </div>
         </div>
 
         <div class="main-canvas-area">
             <div class="d-flex justify-content-between align-items-center mb-4 bg-dark p-3 rounded border border-secondary">
-                <h4 class="fw-bold m-0 text-white"><i class="fa-solid fa-compass-drafting text-primary me-2"></i>Workspace Canvas</h4>
+                <div class="d-flex align-items-center">
+                    <button id="toggle-view-mode" class="btn btn-sm btn-primary me-3 fw-bold"><i class="fa-solid fa-expand"></i> Full-Screen Canvas View</button>
+                    <span class="text-muted small">Tap structural nodes to select where additions append.</span>
+                </div>
                 <div>
-                    <button id="master-clear-btn" class="btn btn-sm btn-outline-danger me-2"><i class="fa-solid fa-trash-can"></i> Reset Canvas</button>
-                    <button id="master-compile-btn" class="btn btn-sm btn-success px-3 fw-bold"><i class="fa-solid fa-code"></i> Compile Grid Code</button>
+                    <button id="master-clear-btn" class="btn btn-sm btn-outline-danger me-2"><i class="fa-solid fa-trash-can"></i> Clear</button>
+                    <button id="master-compile-btn" class="btn btn-sm btn-success px-3 fw-bold"><i class="fa-solid fa-code"></i> Compile Markup</button>
                 </div>
             </div>
 
@@ -85,8 +90,8 @@
 
             <div class="card d-none shadow-lg my-4 border-secondary bg-dark text-white" id="compilation-output-card">
                 <div class="card-header bg-black text-white d-flex justify-content-between align-items-center border-secondary">
-                    <span class="fw-bold text-success"><i class="fa-solid fa-square-terminal me-2"></i>Toyhou.se Copy-Paste Code</span>
-                    <button id="clipboard-copy-btn" class="btn btn-sm btn-primary px-3">Copy Code Array</button>
+                    <span class="fw-bold text-success"><i class="fa-solid fa-square-terminal me-2"></i>Toyhou.se Pasteable Block</span>
+                    <button id="clipboard-copy-btn" class="btn btn-sm btn-primary px-3">Copy Layout Code</button>
                 </div>
                 <div class="card-body p-0">
                     <textarea class="form-control font-monospace border-0 p-3 bg-black text-white" rows="12" style="font-size:0.85rem;" readonly></textarea>
@@ -97,107 +102,79 @@
         <div class="sidebar-right">
             <div id="inspector-placeholder" class="text-center text-muted my-5 pt-5">
                 <i class="fa-solid fa-sliders display-6 mb-3 d-block"></i>
-                <span>Tap any element placed inside your workspace canvas to configure its traits.</span>
+                <span>Highlight any block component placed inside the canvas grid workspace to edit properties.</span>
             </div>
 
             <div id="inspector-controls" class="d-none">
-                <h6 class="fw-bold text-white border-bottom border-secondary pb-2 mb-3"><i class="fa-solid fa-gear text-primary me-2"></i>Property Settings</h6>
+                <h6 class="fw-bold text-white border-bottom border-secondary pb-2 mb-3" id="inspect-headline">Element Properties</h6>
                 
+                <div class="control-section d-none" id="section-tab-mutator">
+                    <span class="form-label-xs text-warning mb-2">Tab Interface Controller</span>
+                    <button id="btn-append-tab-pane" class="btn btn-xs btn-outline-warning w-100 mb-2">+ Add Extra Navigation Tab Pane</button>
+                </div>
+
                 <div class="control-section" id="section-text-data">
-                    <label class="form-label-xs">Element Inner Text</label>
+                    <label class="form-label-xs">Block Inner Display Text</label>
                     <textarea id="prop-text-content" class="form-control form-control-sm bg-dark text-white border-secondary" rows="2"></textarea>
                 </div>
 
                 <div class="control-section" id="section-media-data">
-                    <label class="form-label-xs">Image Target Source URL</label>
+                    <label class="form-label-xs">Image Image Source Link (URL)</label>
                     <input type="text" id="prop-media-url" class="form-control form-control-sm bg-dark text-white border-secondary mb-2">
-                    <label class="form-label-xs">Redirect Link Target URL</label>
-                    <input type="text" id="prop-anchor-url" class="form-control form-control-sm bg-dark text-white border-secondary">
+                    <label class="form-label-xs">Hyperlink Destination Link (Optional)</label>
+                    <input type="text" id="prop-anchor-url" placeholder="Leave empty for unlinked regular images" class="form-control form-control-sm bg-dark text-white border-secondary">
                 </div>
 
                 <div class="control-section">
-                    <span class="form-label-xs mb-2 text-primary">Sizing Specifications</span>
+                    <span class="form-label-xs mb-2 text-primary">Dimensions Rules</span>
                     <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="form-label-xs">Width</label><input type="text" id="prop-width" placeholder="auto" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                        <div class="col-6"><label class="form-label-xs">Height</label><input type="text" id="prop-height" placeholder="auto" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
+                        <div class="col-6"><label class="form-label-xs">Width</label><input type="text" id="prop-width" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
+                        <div class="col-6"><label class="form-label-xs">Height</label><input type="text" id="prop-height" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
+                    </div>
+                </div>
+
+                <div class="control-section">
+                    <span class="form-label-xs mb-2 text-primary">Sizing Padding / Margins</span>
+                    <div class="row g-2 mb-2">
+                        <div class="col-6"><label class="form-label-xs">Padding Vert (Y)</label><input type="text" id="prop-padding-y" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
+                        <div class="col-6"><label class="form-label-xs">Padding Horiz (X)</label><input type="text" id="prop-padding-x" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
                     </div>
                     <div class="row g-2">
-                        <div class="col-6"><label class="form-label-xs">Max Width</label><input type="text" id="prop-maxwidth" placeholder="none" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                        <div class="col-6"><label class="form-label-xs">Min Height</label><input type="text" id="prop-minheight" placeholder="none" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
+                        <div class="col-6"><label class="form-label-xs">Margin Top</label><input type="text" id="prop-margin-t" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
+                        <div class="col-6"><label class="form-label-xs">Margin Bottom</label><input type="text" id="prop-margin-b" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
                     </div>
                 </div>
 
                 <div class="control-section">
-                    <span class="form-label-xs mb-2 text-primary">Traditional Spacing Layouts (Padding/Margins)</span>
-                    <div class="row g-2 mb-2">
-                        <div class="col-6"><label class="form-label-xs">Padding Vert (Y)</label><input type="text" id="prop-padding-y" placeholder="e.g. 10px" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                        <div class="col-6"><label class="form-label-xs">Padding Horiz (X)</label><input type="text" id="prop-padding-x" placeholder="e.g. 15px" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                    </div>
-                    <div class="row g-2">
-                        <div class="col-6"><label class="form-label-xs">Margin Top</label><input type="text" id="prop-margin-t" placeholder="0px" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                        <div class="col-6"><label class="form-label-xs">Margin Bottom</label><input type="text" id="prop-margin-b" placeholder="15px" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                    </div>
-                </div>
-
-                <div class="control-section">
-                    <span class="form-label-xs mb-2 text-primary">Colors & Aesthetics</span>
+                    <span class="form-label-xs mb-2 text-primary">Color Profiles & Layout Backdrops</span>
                     <div class="row g-2 mb-2">
                         <div class="col-6"><label class="form-label-xs">Text Color</label><input type="color" id="prop-text-color" class="form-control form-control-sm bg-dark border-secondary" value="#ffffff"></div>
                         <div class="col-6"><label class="form-label-xs">Solid BG Color</label><input type="color" id="prop-bg-color" class="form-control form-control-sm bg-dark border-secondary" value="#212529"></div>
                     </div>
-                    <div class="form-check form-switch mb-2">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="prop-enable-gradient">
-                        <label class="form-check-label form-label-xs" for="prop-enable-gradient">Use Linear Gradient Background</label>
+                        <label class="form-check-label form-label-xs" for="prop-enable-gradient">Background Linear Gradient Fill</label>
                     </div>
-                    <div id="gradient-subcontrols" class="row g-2 d-none">
-                        <div class="col-6"><label class="form-label-xs">Color Cap A</label><input type="color" id="prop-grad-1" class="form-control form-control-sm bg-dark border-secondary" value="#0d6efd"></div>
-                        <div class="col-6"><label class="form-label-xs">Color Cap B</label><input type="color" id="prop-grad-2" class="form-control form-control-sm bg-dark border-secondary" value="#000000"></div>
+                    <div id="gradient-subcontrols" class="row g-2 d-none mt-1">
+                        <div class="col-6"><label class="form-label-xs">Stop Alpha</label><input type="color" id="prop-grad-1" class="form-control form-control-sm bg-dark border-secondary" value="#0d6efd"></div>
+                        <div class="col-6"><label class="form-label-xs">Stop Beta</label><input type="color" id="prop-grad-2" class="form-control form-control-sm bg-dark border-secondary" value="#000000"></div>
                     </div>
                 </div>
 
                 <div class="control-section">
-                    <span class="form-label-xs mb-2 text-primary">Border Layout and Neon Shadows</span>
+                    <span class="form-label-xs mb-2 text-primary">Borders and Illumination Shadow</span>
                     <div class="row g-2 mb-2">
-                        <div class="col-4"><label class="form-label-xs">Width</label><input type="text" id="prop-border-w" placeholder="1px" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                        <div class="col-4">
-                            <label class="form-label-xs">Style</label>
-                            <select id="prop-border-s" class="form-select form-select-sm bg-dark text-white border-secondary">
-                                <option value="none">None</option><option value="solid">Solid</option><option value="dashed">Dashed</option><option value="dotted">Dotted</option>
-                            </select>
-                        </div>
-                        <div class="col-4"><label class="form-label-xs">Color</label><input type="color" id="prop-border-c" class="form-control form-control-sm bg-dark border-secondary" value="#495057"></div>
-                    </div>
-                    <div class="row g-2 mb-2">
+                        <div class="col-6"><label class="form-label-xs">Border Outline Code</label><input type="text" id="prop-border-raw" placeholder="1px solid #495057" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
                         <div class="col-6"><label class="form-label-xs">Corner Radius</label><input type="text" id="prop-border-radius" placeholder="6px" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
-                        <div class="col-6"><label class="form-label-xs">Opacity (0-1)</label><input type="text" id="prop-opacity" placeholder="1" class="form-control form-control-sm bg-dark text-white border-secondary"></div>
                     </div>
-                    
-                    <div class="form-check form-switch mb-2">
+                    <div class="form-check form-switch">
                         <input class="form-check-input" type="checkbox" id="prop-enable-glow">
-                        <label class="form-check-label form-label-xs" for="prop-enable-glow">Activate Outer Box Neon Glow</label>
+                        <label class="form-check-label form-label-xs" for="prop-enable-glow">Outer Ambient Aura Glow Effect</label>
                     </div>
-                    <div id="glow-subcontrols" class="d-none">
+                    <div id="glow-subcontrols" class="d-none mt-1">
                         <div class="row g-2">
-                            <div class="col-6"><label class="form-label-xs">Aura Color</label><input type="color" id="prop-glow-color" class="form-control form-control-sm bg-dark border-secondary" value="#0d6efd"></div>
-                            <div class="col-6"><label class="form-label-xs">Radius Spread</label><input type="text" id="prop-glow-spread" placeholder="12px" class="form-control form-control-sm bg-dark text-white border-secondary" value="12px"></div>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="control-section" id="section-flexbox-matrix">
-                    <span class="form-label-xs mb-2 text-primary">Flexbox Row Content Positioning</span>
-                    <div class="row g-2">
-                        <div class="col-6">
-                            <label class="form-label-xs">Justify Content</label>
-                            <select id="prop-flex-justify" class="form-select form-select-sm bg-dark text-white border-secondary">
-                                <option value="flex-start">Start</option><option value="center">Center</option><option value="flex-end">End</option><option value="space-between">Space Between</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label-xs">Align Items</label>
-                            <select id="prop-flex-align" class="form-select form-select-sm bg-dark text-white border-secondary">
-                                <option value="stretch">Stretch</option><option value="flex-start">Start</option><option value="center">Center</option><option value="flex-end">End</option>
-                            </select>
+                            <div class="col-6"><label class="form-label-xs">Glow Color</label><input type="color" id="prop-glow-color" class="form-control form-control-sm bg-dark border-secondary" value="#0d6efd"></div>
+                            <div class="col-6"><label class="form-label-xs">Radius Spread</label><input type="text" id="prop-glow-spread" class="form-control form-control-sm bg-dark text-white border-secondary" value="12px"></div>
                         </div>
                     </div>
                 </div>
@@ -211,228 +188,245 @@
         const inspectorControls = document.getElementById('inspector-controls');
         const outputWindowCard = document.getElementById('compilation-output-card');
         const outputTextArea = document.querySelector('#compilation-output-card textarea');
+        const masterFrame = document.getElementById('master-app-frame');
 
         let targetedActiveNode = null;
 
-        // Structured Core HTML Node Element Blueprints (No Flex Gap Framework classes)
-        const assetBlueprints = {
-            'row-2': `<div class="row my-2 content-target-block"><div class="col-md-6 mb-2"><div class="p-3 bg-dark border border-secondary rounded text-muted">Left Grid Column</div></div><div class="col-md-6 mb-2"><div class="p-3 bg-dark border border-secondary rounded text-muted">Right Grid Column</div></div></div>`,
-            'section-card': `<div class="p-4 bg-dark text-white border border-secondary rounded-3 content-target-block"><h4>Styled Box Frame Area</h4><p class="text-muted small mb-0">Use this component layer container base to build custom content groups layout segments.</p></div>`,
-            'flex-row': `<div class="d-flex align-items-center justify-content-between my-2 content-target-block" style="flex-wrap: wrap;"><div class="p-2 border border-secondary bg-black rounded m-1">Flex A</div><div class="p-2 border border-secondary bg-black rounded m-1">Flex B</div></div>`,
-            'header-node': `<h2 class="display-6 my-2 text-primary content-target-block">Character Header Title</h2>`,
-            'para-node': `<p class="my-2 content-target-block text-muted" style="line-height:1.7;">Tap this node box frame to input biographical information data strings inside this layout element directly.</p>`,
-            'badge-list': `<div class="my-2 content-target-block"><span class="badge bg-primary p-2 me-2">Status: Active</span><span class="badge bg-secondary p-2">He/Him</span></div>`,
-            'img-linked': `<div class="my-2 text-center content-target-block"><a href="#" target="_blank" class="anchor-wrapper"><img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500" class="img-fluid rounded border border-secondary" style="max-height:250px;" alt="Frame Asset"></a></div>`,
-            'tabs-group': `<div class="my-2 content-target-block"><ul class="nav nav-tabs border-secondary mb-2"><li class="nav-item"><a class="nav-link active" href="#">Tab Section Title</a></li></ul><div class="p-2 text-muted small">Content space window template block.</div></div>`,
-            'accordion-group': `<div class="accordion my-2 content-target-block"><div class="accordion-item bg-dark text-white border-secondary"><h2 class="accordion-header"><button class="accordion-button bg-dark text-white" type="button">Accordion Header Strip</button></h2><div class="accordion-body text-muted small">Input collapsible panel texts fields parameters inside this element block zone framework.</div></div></div>`,
-            'progress-fill': `<div class="my-2 content-target-block"><div class="d-flex justify-content-between small text-muted mb-1"><span>Vitals Matrix Stat Track</span><span>75%</span></div><div class="progress bg-black" style="height: 10px;"><div class="progress-bar bg-primary" role="progressbar" style="width: 75%"></div></div></div>`,
-            'stat-table': `<table class="table table-sm table-dark table-borderless my-2 content-target-block"><tbody><tr style="border-bottom:1px solid #343a40;"><td class="fw-bold text-primary py-2">Property Value Key</td><td class="text-muted py-2">Information Attribute Field Data</td></tr></tbody></table>`,
-            'relation-card': `<div class="card bg-dark border-secondary my-2 content-target-block"><div class="card-body p-3"><h6>Character Relationship Anchor Label</h6><p class="small text-muted mb-0">Describe alignments, bonds or profiles notes configurations inside this canvas box card.</p></div></div>`,
-            'lore-box': `<div class="border-start border-primary ps-3 my-2 content-target-block"><h6>Chronology History Timeline Log Marker</h6><p class="small text-muted mb-0">Enter timeline logs context notes parameters strings.</p></div>`
+        // 1. DYNAMIC NESTING BLUEPRINTS ENGINE
+        const rawBlueprints = {
+            'row': `<div class="row content-target-block mx-0 nested-dropzone"></div>`,
+            'col-md-4': `<div class="col-md-4 mb-2 content-target-block nested-dropzone" style="border:1px dotted rgba(255,255,255,0.15);"></div>`,
+            'col-md-6': `<div class="col-md-6 mb-2 content-target-block nested-dropzone" style="border:1px dotted rgba(255,255,255,0.15);"></div>`,
+            'col-md-8': `<div class="col-md-8 mb-2 content-target-block nested-dropzone" style="border:1px dotted rgba(255,255,255,0.15);"></div>`,
+            'col-md-12': `<div class="col-md-12 mb-2 content-target-block nested-dropzone" style="border:1px dotted rgba(255,255,255,0.15);"></div>`,
+            'div-box': `<div class="p-3 bg-dark border border-secondary rounded content-target-block nested-dropzone"></div>`,
+            'header-node': `<h2 class="display-6 my-2 text-primary content-target-block">Heading Title Label</h2>`,
+            'para-node': `<p class="my-2 content-target-block text-muted">Paragraph item description textual block template lines here.</p>`,
+            'img-plain': `<img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500" class="img-fluid rounded border border-secondary content-target-block d-block mx-auto" style="max-height:250px;" alt="Asset Matrix">`,
+            'tab-container': `
+                <div class="my-2 content-target-block w-100">
+                    <ul class="nav nav-tabs border-secondary mb-2 tab-links-list"><li class="nav-item"><a class="nav-link active" href="#">Tab Section 1</a></li></ul>
+                    <div class="tab-contents-holder p-2 border border-secondary rounded position-relative nested-dropzone"></div>
+                </div>`,
+            'accordion-node': `<div class="accordion my-2 content-target-block w-100"><div class="accordion-item bg-dark text-white border-secondary"><h2 class="accordion-header"><button class="accordion-button bg-dark text-white" type="button">Collapsible Block Row</button></h2><div class="accordion-body nested-dropzone"></div></div></div>`,
+            'progress-fill': `<div class="my-2 content-target-block w-100"><div class="d-flex justify-content-between small text-muted mb-1"><span>Dynamic Metric Range Bar</span><span>75%</span></div><div class="progress bg-black" style="height:10px;"><div class="progress-bar bg-primary" style="width: 75%"></div></div></div>`
         };
 
-        // 1. APPEND ELEMENTS LAYER (Click addition engine)
+        // 2. ELEMENT GENERATOR SWITCH (Infinite Nested Insertion)
         document.querySelectorAll('.element-bank-item').forEach(item => {
             item.addEventListener('click', () => {
                 const type = item.getAttribute('data-type');
-                const uniqueId = 'th-node-' + Math.floor(Math.random() * 100000);
+                const randId = 'node-' + Math.floor(Math.random() * 100000);
                 
-                const nodeContainer = document.createElement('div');
-                nodeContainer.className = 'w-item';
-                nodeContainer.id = uniqueId;
-                nodeContainer.setAttribute('data-node-type', type);
-                
-                nodeContainer.innerHTML = `
+                const wrapper = document.createElement('div');
+                wrapper.className = 'w-item';
+                wrapper.id = randId;
+                wrapper.setAttribute('data-node-type', type);
+                wrapper.innerHTML = `
                     <div class="w-item-actions">
                         <button class="act-btn move-up"><i class="fa-solid fa-arrow-up"></i></button>
                         <button class="act-btn move-down"><i class="fa-solid fa-arrow-down"></i></button>
-                        <button class="act-btn clone-item"><i class="fa-solid fa-clone"></i></button>
                         <button class="act-btn drop-item text-danger"><i class="fa-solid fa-trash"></i></button>
                     </div>
-                    ${assetBlueprints[type]}
+                    ${rawBlueprints[type]}
                 `;
-                
-                canvas.appendChild(nodeContainer);
-                setupWorkspaceItemListeners(nodeContainer);
-                nodeContainer.click(); // Select active element box panel instantly
+
+                // If another block is selected and it acts as an open dropzone, embed inside it
+                if (targetedActiveNode && targetedActiveNode.querySelector('.nested-dropzone')) {
+                    targetedActiveNode.querySelector('.nested-dropzone').appendChild(wrapper);
+                } else {
+                    canvas.appendChild(wrapper);
+                }
+
+                bindWorkspaceItemActions(wrapper);
+                wrapper.click();
             });
         });
 
-        // 2. ITEM LISTENERS (Canvas Ordering Framework updates)
-        function setupWorkspaceItemListeners(node) {
+        // 3. CANVAS EVENT ROUTINES & SELECTION TRACKING
+        function bindWorkspaceItemActions(node) {
             node.addEventListener('click', (e) => {
+                e.stopPropagation(); // Avoid parental selection bubble overrides
                 if (e.target.closest('.w-item-actions')) return;
                 
                 document.querySelectorAll('.w-item').forEach(el => el.classList.remove('active-node'));
                 node.classList.add('active-node');
                 targetedActiveNode = node;
                 
-                revealInspectorPanel(node);
+                revealInspectorProperties(node);
             });
 
-            node.querySelector('.move-up').addEventListener('click', () => {
-                if (node.previousElementSibling) canvas.insertBefore(node, node.previousElementSibling);
-            });
-            node.querySelector('.move-down').addEventListener('click', () => {
-                if (node.nextElementSibling) canvas.insertBefore(node.nextElementSibling, node);
-            });
-            node.querySelector('.clone-item').addEventListener('click', () => {
-                const dup = node.cloneNode(true);
-                dup.id = 'th-node-' + Math.floor(Math.random() * 100000);
-                dup.classList.remove('active-node');
-                canvas.insertBefore(dup, node.nextElementSibling);
-                setupWorkspaceItemListeners(dup);
-            });
-            node.querySelector('.drop-item').addEventListener('click', () => {
-                node.remove();
-                hideInspectorPanel();
-            });
+            node.querySelector('.move-up').addEventListener('click', (e) => { e.stopPropagation(); if (node.previousElementSibling) node.parentNode.insertBefore(node, node.previousElementSibling); });
+            node.querySelector('.move-down').addEventListener('click', (e) => { e.stopPropagation(); if (node.nextElementSibling) node.parentNode.insertBefore(node.nextElementSibling, node); });
+            node.querySelector('.drop-item').addEventListener('click', (e) => { e.stopPropagation(); node.remove(); clearInspectorPanel(); });
         }
 
-        // 3. PROPERTY INSPECTOR MAPPER SYSTEM (Populate right parameters window panel box)
-        function revealInspectorPanel(node) {
+        // 4. PROPERTY MATRIX ENGINE MAPPING
+        function revealInspectorProperties(node) {
             inspectorPlaceholder.classList.add('d-none');
             inspectorControls.classList.remove('d-none');
             
             const type = node.getAttribute('data-node-type');
-            const targetElement = node.querySelector('.content-target-block');
+            const target = node.querySelector('.content-target-block');
 
+            document.getElementById('inspect-headline').innerText = `Edit: ${type.toUpperCase()}`;
             document.getElementById('section-text-data').classList.toggle('d-none', !['header-node', 'para-node'].includes(type));
-            document.getElementById('section-media-data').classList.toggle('d-none', type !== 'img-linked');
-            document.getElementById('section-flexbox-matrix').classList.toggle('d-none', type !== 'flex-row');
+            document.getElementById('section-media-data').classList.toggle('d-none', type !== 'img-plain');
+            document.getElementById('section-tab-mutator').classList.toggle('d-none', type !== 'tab-container');
 
-            document.getElementById('prop-text-content').value = targetElement ? targetElement.innerText : '';
-            if (type === 'img-linked') {
-                document.getElementById('prop-media-url').value = node.querySelector('img').src;
-                document.getElementById('prop-anchor-url').value = node.querySelector('a').href;
+            document.getElementById('prop-text-content').value = target ? target.innerText : '';
+            
+            if (type === 'img-plain') {
+                const imgTag = node.querySelector('img');
+                const parentAnchor = imgTag.parentNode;
+                document.getElementById('prop-media-url').value = imgTag.src;
+                document.getElementById('prop-anchor-url').value = parentAnchor.tagName === 'A' ? parentAnchor.href : '';
             }
 
-            document.getElementById('prop-width').value = targetElement.style.width || '';
-            document.getElementById('prop-height').value = targetElement.style.height || '';
-            document.getElementById('prop-maxwidth').value = targetElement.style.maxWidth || '';
-            document.getElementById('prop-minheight').value = targetElement.style.minHeight || '';
-            
-            document.getElementById('prop-padding-y').value = targetElement.style.paddingTop || '';
-            document.getElementById('prop-padding-x').value = targetElement.style.paddingLeft || '';
-            document.getElementById('prop-margin-t').value = targetElement.style.marginTop || '';
-            document.getElementById('prop-margin-b').value = targetElement.style.marginBottom || '';
+            document.getElementById('prop-width').value = target.style.width || '';
+            document.getElementById('prop-height').value = target.style.height || '';
+            document.getElementById('prop-padding-y').value = target.style.paddingTop || '';
+            document.getElementById('prop-padding-x').value = target.style.paddingLeft || '';
+            document.getElementById('prop-margin-t').value = target.style.marginTop || '';
+            document.getElementById('prop-margin-b').value = target.style.marginBottom || '';
+            document.getElementById('prop-border-raw').value = target.style.border || '';
+            document.getElementById('prop-border-radius').value = target.style.borderRadius || '';
 
-            document.getElementById('prop-border-w').value = targetElement.style.borderWidth || '';
-            document.getElementById('prop-border-s').value = targetElement.style.borderStyle || 'none';
-            document.getElementById('prop-border-radius').value = targetElement.style.borderRadius || '';
-            document.getElementById('prop-opacity').value = targetElement.style.opacity || '';
+            const shadows = target.style.boxShadow || '';
+            document.getElementById('prop-enable-glow').checked = shadows.includes('px');
+            document.getElementById('glow-subcontrols').classList.toggle('d-none', !shadows.includes('px'));
 
-            const shadowsStyle = targetElement.style.boxShadow || '';
-            const checkGlow = document.getElementById('prop-enable-glow');
-            checkGlow.checked = shadowsStyle.includes('px');
-            document.getElementById('glow-subcontrols').classList.toggle('d-none', !checkGlow.checked);
-
-            const bgImageStyle = targetElement.style.backgroundImage || '';
-            const checkGrad = document.getElementById('prop-enable-gradient');
-            checkGrad.checked = bgImageStyle.includes('linear-gradient');
-            document.getElementById('gradient-subcontrols').classList.toggle('d-none', !checkGrad.checked);
+            const bgImage = target.style.backgroundImage || '';
+            document.getElementById('prop-enable-gradient').checked = bgImage.includes('linear-gradient');
+            document.getElementById('gradient-subcontrols').classList.toggle('d-none', !bgImage.includes('linear-gradient'));
         }
 
-        function hideInspectorPanel() {
-            targetedActiveNode = null;
-            inspectorPlaceholder.classList.remove('d-none');
-            inspectorControls.classList.add('d-none');
-        }
-
-        // 4. DATA SYNCHRONIZATION RUNTIME BLOCK (Apply properties onto element markup)
-        function writePropertiesToSelectedNode() {
+        // 5. SAVING DYNAMIC VARIABLE PROPERTIES
+        function applyLiveInspectorUpdates() {
             if (!targetedActiveNode) return;
             const type = targetedActiveNode.getAttribute('data-node-type');
-            const targetElement = targetedActiveNode.querySelector('.content-target-block');
+            const target = targetedActiveNode.querySelector('.content-target-block');
 
             if (['header-node', 'para-node'].includes(type)) {
-                targetElement.innerText = document.getElementById('prop-text-content').value;
+                target.innerText = document.getElementById('prop-text-content').value;
             }
-            if (type === 'img-linked') {
-                targetedActiveNode.querySelector('img').src = document.getElementById('prop-media-url').value;
-                targetedActiveNode.querySelector('a').href = document.getElementById('prop-anchor-url').value;
+            
+            if (type === 'img-plain') {
+                const imgTag = targetedActiveNode.querySelector('img');
+                imgTag.src = document.getElementById('prop-media-url').value;
+                const targetLinkHref = document.getElementById('prop-anchor-url').value.trim();
+                
+                if (targetLinkHref !== '') {
+                    if (imgTag.parentNode.tagName !== 'A') {
+                        const wrapAnchor = document.createElement('a');
+                        wrapAnchor.href = targetLinkHref;
+                        wrapAnchor.target = '_blank';
+                        imgTag.parentNode.insertBefore(wrapAnchor, imgTag);
+                        wrapAnchor.appendChild(imgTag);
+                    } else {
+                        imgTag.parentNode.href = targetLinkHref;
+                    }
+                } else if (imgTag.parentNode.tagName === 'A') {
+                    const anchorNode = imgTag.parentNode;
+                    anchorNode.parentNode.insertBefore(imgTag, anchorNode);
+                    anchorNode.remove();
+                }
             }
 
-            targetElement.style.width = document.getElementById('prop-width').value;
-            targetElement.style.height = document.getElementById('prop-height').value;
-            targetElement.style.maxWidth = document.getElementById('prop-maxwidth').value;
-            targetElement.style.minHeight = document.getElementById('prop-minheight').value;
+            target.style.width = document.getElementById('prop-width').value;
+            target.style.height = document.getElementById('prop-height').value;
+            
+            const pY = document.getElementById('prop-padding-y').value;
+            const pX = document.getElementById('prop-padding-x').value;
+            if (pY) { target.style.paddingTop = pY; target.style.paddingBottom = pY; }
+            if (pX) { target.style.paddingLeft = pX; target.style.paddingRight = pX; }
+            
+            target.style.marginTop = document.getElementById('prop-margin-t').value;
+            target.style.marginBottom = document.getElementById('prop-margin-b').value;
+            target.style.border = document.getElementById('prop-border-raw').value;
+            target.style.borderRadius = document.getElementById('prop-border-radius').value;
+            target.style.color = document.getElementById('prop-text-color').value;
 
-            const paddingVertical = document.getElementById('prop-padding-y').value;
-            const paddingHorizontal = document.getElementById('prop-padding-x').value;
-            if (paddingVertical) { targetElement.style.paddingTop = paddingVertical; targetElement.style.paddingBottom = paddingVertical; }
-            if (paddingHorizontal) { targetElement.style.paddingLeft = paddingHorizontal; targetElement.style.paddingRight = paddingHorizontal; }
-            
-            targetElement.style.marginTop = document.getElementById('prop-margin-t').value;
-            targetElement.style.marginBottom = document.getElementById('prop-margin-b').value;
-
-            targetElement.style.color = document.getElementById('prop-text-color').value;
-            
-            const isGradientActive = document.getElementById('prop-enable-gradient').checked;
-            document.getElementById('gradient-subcontrols').classList.toggle('d-none', !isGradientActive);
-            
-            if (isGradientActive) {
-                const colorA = document.getElementById('prop-grad-1').value;
-                const colorB = document.getElementById('prop-grad-2').value;
-                targetElement.style.backgroundImage = `linear-gradient(135deg, ${colorA}, ${colorB})`;
+            if (document.getElementById('prop-enable-gradient').checked) {
+                target.style.backgroundImage = `linear-gradient(135deg, ${document.getElementById('prop-grad-1').value}, ${document.getElementById('prop-grad-2').value})`;
             } else {
-                targetElement.style.backgroundImage = 'none';
-                targetElement.style.backgroundColor = document.getElementById('prop-bg-color').value;
+                target.style.backgroundImage = 'none';
+                target.style.backgroundColor = document.getElementById('prop-bg-color').value;
             }
 
-            targetElement.style.borderWidth = document.getElementById('prop-border-w').value;
-            targetElement.style.borderStyle = document.getElementById('prop-border-s').value;
-            targetElement.style.borderColor = document.getElementById('prop-border-c').value;
-            targetElement.style.borderRadius = document.getElementById('prop-border-radius').value;
-            targetElement.style.opacity = document.getElementById('prop-opacity').value;
-
-            const isGlowActive = document.getElementById('prop-enable-glow').checked;
-            document.getElementById('glow-subcontrols').classList.toggle('d-none', !isGlowActive);
-            if (isGlowActive) {
-                const auraColor = document.getElementById('prop-glow-color').value;
-                const spreadRadius = document.getElementById('prop-glow-spread').value || '12px';
-                targetElement.style.boxShadow = `0 0 ${spreadRadius} ${auraColor}`;
+            if (document.getElementById('prop-enable-glow').checked) {
+                target.style.boxShadow = `0 0 ${document.getElementById('prop-glow-spread').value || '12px'} ${document.getElementById('prop-glow-color').value}`;
             } else {
-                targetElement.style.boxShadow = 'none';
-            }
-
-            if (type === 'flex-row') {
-                targetElement.style.justifyContent = document.getElementById('prop-flex-justify').value;
-                targetElement.style.alignItems = document.getElementById('prop-flex-align').value;
+                target.style.boxShadow = 'none';
             }
         }
 
-        ['input', 'change'].forEach(evtType => {
-            inspectorControls.addEventListener(evtType, writePropertiesToSelectedNode);
+        ['input', 'change'].forEach(e => inspectorControls.addEventListener(e, applyLiveInspectorUpdates));
+
+        // Dynamic Tab Pane Addition Append Engine
+        document.getElementById('btn-append-tab-pane').addEventListener('click', () => {
+            if (!targetedActiveNode || targetedActiveNode.getAttribute('data-node-type') !== 'tab-container') return;
+            const linksList = targetedActiveNode.querySelector('.tab-links-list');
+            const totalTabs = linksList.querySelectorAll('li').length + 1;
+            
+            const newLi = document.createElement('li');
+            newLi.className = 'nav-item';
+            newLi.innerHTML = `<a class="nav-link text-muted" href="#">Tab Section ${totalTabs}</a>`;
+            linksList.appendChild(newLi);
         });
 
-        // 5. CODE COMPILER EXECUTIONS (Wipe helper structures and output clean block container markup)
-        document.getElementById('master-compile-btn').addEventListener('click', () => {
-            const workspaceClone = canvas.cloneNode(true);
-            workspaceClone.querySelectorAll('.w-item-actions').forEach(actionsPanel => actionsPanel.remove());
-
-            const structuralElements = workspaceClone.querySelectorAll('.w-item');
-            let cleanlyCompiledHtml = '';
-
-            structuralElements.forEach(item => {
-                const elementBlockMarkup = item.querySelector('.content-target-block') || item.firstElementChild;
-                if(elementBlockMarkup) {
-                    cleanlyCompiledHtml += elementBlockMarkup.outerHTML.trim() + '\n';
-                }
-            });
-
-            if (cleanlyCompiledHtml.trim() === '') {
-                alert('Add element assets to the layout view block before running compilers!');
-                return;
+        // 6. TOGGLE FULL SCREEN WORKSPACE MODE
+        document.getElementById('toggle-view-mode').addEventListener('click', () => {
+            masterFrame.classList.toggle('fullscreen-mode');
+            const btn = document.getElementById('toggle-view-mode');
+            if (masterFrame.classList.contains('fullscreen-mode')) {
+                btn.innerHTML = `<i class="fa-solid fa-compress"></i> Exit Full-Screen`;
+                btn.classList.replace('btn-primary', 'btn-warning');
+            } else {
+                btn.innerHTML = `<i class="fa-solid fa-expand"></i> Full-Screen Canvas View`;
+                btn.classList.replace('btn-warning', 'btn-primary');
             }
+        });
 
-            outputTextArea.value = `<div class="container-fluid px-1 py-2">\n${cleanlyCompiledHtml}</div>`;
+        function clearInspectorPanel() { targetedActiveNode = null; inspectorPlaceholder.classList.remove('d-none'); inspectorControls.classList.add('d-none'); }
+
+        // 7. SANITIZED LAYOUT CODE COMPILER
+        document.getElementById('master-compile-btn').addEventListener('click', () => {
+            const cleanExtract = (element) => {
+                let htmlOut = '';
+                const immediateChildren = element.children;
+                for (let child of immediateChildren) {
+                    if (child.classList.contains('w-item')) {
+                        const targetBlock = child.querySelector('.content-target-block');
+                        if (targetBlock) {
+                            const blockClone = targetBlock.cloneNode(true);
+                            blockClone.removeAttribute('style'); // Strip editor-only borders safely
+                            
+                            // Recursive processing for dropzones inside container blocks
+                            const structuralDropzone = blockClone.querySelector('.nested-dropzone');
+                            if (structuralDropzone) {
+                                structuralDropzone.innerHTML = cleanExtract(targetBlock.querySelector('.nested-dropzone'));
+                                structuralDropzone.className = structuralDropzone.className.replace('nested-dropzone', '').trim();
+                            }
+                            htmlOut += blockClone.outerHTML.trim() + '\n';
+                        }
+                    } else {
+                        htmlOut += child.outerHTML;
+                    }
+                }
+                return htmlOut;
+            };
+
+            const compiledHtml = cleanExtract(canvas);
+            if (compiledHtml.trim() === '') { alert('Add block items onto the workspace canvas layout before compiling!'); return; }
+
+            outputTextArea.value = `<div class="container-fluid px-1 py-2">\n${compiledHtml}</div>`;
             outputWindowCard.classList.remove('d-none');
             outputWindowCard.scrollIntoView({ behavior: 'smooth' });
         });
 
-        document.getElementById('master-clear-btn').addEventListener('click', () => { if(confirm('Clear current canvas layout?')) { canvas.innerHTML = ''; hideInspectorPanel(); outputWindowCard.classList.add('d-none'); } });
-        document.getElementById('clipboard-copy-btn').addEventListener('click', () => { outputTextArea.select(); navigator.clipboard.writeText(outputTextArea.value); document.getElementById('clipboard-copy-btn').textContent = 'Copied!'; setTimeout(() => document.getElementById('clipboard-copy-btn').textContent = 'Copy Code Array', 2000); });
+        document.getElementById('master-clear-btn').addEventListener('click', () => { if(confirm('Reset current workspace canvas configuration?')) { canvas.innerHTML = ''; clearInspectorPanel(); outputWindowCard.classList.add('d-none'); } });
+        document.getElementById('clipboard-copy-btn').addEventListener('click', () => { outputTextArea.select(); navigator.clipboard.writeText(outputTextArea.value); document.getElementById('clipboard-copy-btn').textContent = 'Copied!'; setTimeout(() => document.getElementById('clipboard-copy-btn').textContent = 'Copy Layout Code', 2000); });
     </script>
 </body>
 </html>
