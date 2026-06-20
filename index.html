@@ -25,6 +25,7 @@
         /* Draggable Element Cards */
         .element-bank-item { background: #2c3034; border: 1px solid #3d4246; border-radius: 6px; padding: 10px; margin-bottom: 6px; cursor: grab; font-size: 0.9rem; font-weight: 500; display: flex; align-items: center; }
         .element-bank-item i { width: 24px; color: #0d6efd; }
+        .element-bank-item:hover { background: #343a40; border-color: #4f555b; }
         
         /* Infinite Droppable Canvas Area */
         .workspace-viewport { background: #212529; border: 2px dashed #343a40; border-radius: 12px; padding: 25px; min-height: 600px; position: relative; }
@@ -62,7 +63,7 @@
     <div class="app-container" id="master-app-frame">
         <div class="sidebar-left">
             <h5 class="fw-bold text-white mb-1"><i class="fa-solid fa-code text-primary me-2"></i>Code Blocks</h5>
-            <p class="text-muted small mb-3">Drag items straight onto the workspace canvas or dropzones.</p>
+            <p class="text-muted small mb-3">Drag items straight onto the canvas workspace or dropzones.</p>
             
             <div id="elements-bank">
                 <div class="category-header">Grid Framework</div>
@@ -71,17 +72,25 @@
                 <div class="element-bank-item" draggable="true" data-type="col-md-6"><i class="fa-solid fa-columns"></i>Column (Size 6 / Half Width)</div>
                 <div class="element-bank-item" draggable="true" data-type="col-md-8"><i class="fa-solid fa-columns"></i>Column (Size 8 / Two-Thirds)</div>
                 <div class="element-bank-item" draggable="true" data-type="col-md-12"><i class="fa-solid fa-square"></i>Column (Size 12 / Full Width)</div>
+                <div class="element-bank-item" draggable="true" data-type="flex-row"><i class="fa-solid fa-arrows-left-right"></i>Flex Container</div>
 
-                <div class="category-header">Freeform Blocks</div>
+                <div class="category-header">Freeform & Structure</div>
                 <div class="element-bank-item" draggable="true" data-type="div-box"><i class="fa-solid fa-box-open"></i>Generic Div Box</div>
+                <div class="element-bank-item" draggable="true" data-type="section-card"><i class="fa-solid fa-square"></i>Base Card Box</div>
                 <div class="element-bank-item" draggable="true" data-type="header-node"><i class="fa-solid fa-heading"></i>Heading Text Element</div>
                 <div class="element-bank-item" draggable="true" data-type="para-node"><i class="fa-solid fa-align-left"></i>Paragraph Text Element</div>
+                <div class="element-bank-item" draggable="true" data-type="badge-list"><i class="fa-solid fa-tags"></i>Status Badges Panel</div>
                 <div class="element-bank-item" draggable="true" data-type="img-plain"><i class="fa-regular fa-image"></i>Standard Image Box</div>
 
                 <div class="category-header">Complex Widgets</div>
                 <div class="element-bank-item" draggable="true" data-type="tab-container"><i class="fa-solid fa-folder-open"></i>Dynamic Tab Group</div>
                 <div class="element-bank-item" draggable="true" data-type="accordion-node"><i class="fa-solid fa-bars-staggered"></i>Accordion Collapsible</div>
                 <div class="element-bank-item" draggable="true" data-type="progress-fill"><i class="fa-solid fa-battery-half"></i>Stat Progress Tracker</div>
+
+                <div class="category-header">Character Sheet Components</div>
+                <div class="element-bank-item" draggable="true" data-type="stat-table"><i class="fa-solid fa-table-list"></i>Detailed Vitals Table</div>
+                <div class="element-bank-item" draggable="true" data-type="relation-card"><i class="fa-solid fa-heart"></i>Relationship Block Link</div>
+                <div class="element-bank-item" draggable="true" data-type="lore-box"><i class="fa-solid fa-book-open"></i>Lore Timeline Section</div>
             </div>
         </div>
 
@@ -213,16 +222,19 @@
         let targetedActiveNode = null;
         let draggedBlueprintType = null;
 
-        // Core Static Blueprints Dictionary Frame Markup Trackers
+        // ALL original blueprints completely preserved and unified
         const rawBlueprints = {
             'row': `<div class="row content-target-block mx-0 nested-dropzone"></div>`,
             'col-md-4': `<div class="col-md-4 mb-2 content-target-block nested-dropzone"></div>`,
             'col-md-6': `<div class="col-md-6 mb-2 content-target-block nested-dropzone"></div>`,
             'col-md-8': `<div class="col-md-8 mb-2 content-target-block nested-dropzone"></div>`,
             'col-md-12': `<div class="col-md-12 mb-2 content-target-block nested-dropzone"></div>`,
+            'flex-row': `<div class="d-flex align-items-center justify-content-between my-2 content-target-block nested-dropzone" style="flex-wrap: wrap;"></div>`,
             'div-box': `<div class="p-3 bg-dark border border-secondary rounded content-target-block nested-dropzone"></div>`,
+            'section-card': `<div class="p-4 bg-dark text-white border border-secondary rounded-3 content-target-block nested-dropzone"><h4>Styled Box Frame Area</h4></div>`,
             'header-node': `<h2 class="display-6 my-2 text-primary content-target-block">Heading Title Label</h2>`,
             'para-node': `<p class="my-2 content-target-block text-muted">Paragraph item description textual block template lines here.</p>`,
+            'badge-list': `<div class="my-2 content-target-block"><span class="badge bg-primary p-2 me-2">Status: Active</span><span class="badge bg-secondary p-2">He/Him</span></div>`,
             'img-plain': `<img src="https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?w=500" class="img-fluid rounded border border-secondary content-target-block d-block mx-auto" style="max-height:250px;" alt="Asset Matrix">`,
             'tab-container': `
                 <div class="my-2 content-target-block w-100">
@@ -230,17 +242,19 @@
                     <div class="tab-contents-holder p-2 border border-secondary rounded position-relative nested-dropzone"></div>
                 </div>`,
             'accordion-node': `<div class="accordion my-2 content-target-block w-100"><div class="accordion-item bg-dark text-white border-secondary"><h2 class="accordion-header"><button class="accordion-button bg-dark text-white" type="button">Collapsible Block Row</button></h2><div class="accordion-body nested-dropzone"></div></div></div>`,
-            'progress-fill': `<div class="my-2 content-target-block w-100"><div class="d-flex justify-content-between small text-muted mb-1"><span>Dynamic Metric Range Bar</span><span>75%</span></div><div class="progress bg-black" style="height:10px;"><div class="progress-bar bg-primary" style="width: 75%"></div></div></div>`
+            'progress-fill': `<div class="my-2 content-target-block w-100"><div class="d-flex justify-content-between small text-muted mb-1"><span>Dynamic Metric Range Bar</span><span>75%</span></div><div class="progress bg-black" style="height:10px;"><div class="progress-bar bg-primary" style="width: 75%"></div></div></div>`,
+            'stat-table': `<table class="table table-sm table-dark table-borderless my-2 content-target-block"><tbody><tr style="border-bottom:1px solid #343a40;"><td class="fw-bold text-primary py-2">Property Value Key</td><td class="text-muted py-2">Information Attribute Field Data</td></tr></tbody></table>`,
+            'relation-card': `<div class="card bg-dark border-secondary my-2 content-target-block"><div class="card-body p-3"><h6>Character Relationship Anchor Label</h6><p class="small text-muted mb-0">Describe alignments, bonds or profiles notes.</p></div></div>`,
+            'lore-box': `<div class="border-start border-primary ps-3 my-2 content-target-block"><h6>Chronology History Timeline Log Marker</h6><p class="small text-muted mb-0">Enter timeline logs context parameters.</p></div>`
         };
 
-        // 1. DRAG-AND-DROP SETUP FOR DRAGGING SOURCE
+        // Drag handlers setup
         document.querySelectorAll('.element-bank-item').forEach(item => {
             item.addEventListener('dragstart', (e) => {
                 draggedBlueprintType = item.getAttribute('data-type');
             });
         });
 
-        // Initialize dropzones handling loops dynamically
         function initDropzoneMechanics(zone) {
             zone.addEventListener('dragover', (e) => {
                 e.preventDefault();
@@ -281,7 +295,6 @@
         }
         initDropzoneMechanics(canvas);
 
-        // 2. CANVAS BLOCK SELECTION AND TOUCH INTERACTIVE RESIZING MATRIX
         function bindWorkspaceItemActions(node) {
             const target = node.querySelector('.content-target-block');
 
@@ -298,12 +311,11 @@
 
             node.querySelector('.drop-item').addEventListener('click', (e) => { e.stopPropagation(); node.remove(); clearInspectorPanel(); });
 
-            // Initialize nested dropzones found inside complex components layout tracks
             node.querySelectorAll('.nested-dropzone').forEach(nestedZone => {
                 initDropzoneMechanics(nestedZone);
             });
 
-            // Native Touch/Mouse Event Handlers for Custom Resizing Squares
+            // Multi-directional Resizing System
             const handles = node.querySelectorAll('.resize-handle');
             handles.forEach(handle => {
                 handle.addEventListener('mousedown', initResizeEvent);
@@ -323,13 +335,11 @@
                         const currentY = moveEvent.clientY || (moveEvent.touches ? moveEvent.touches[0].clientY : startY);
                         
                         if (handle.classList.contains('resize-e') || handle.classList.contains('resize-se')) {
-                            const computedWidth = startWidth + (currentX - startX);
-                            target.style.width = computedWidth + 'px';
+                            target.style.width = (startWidth + (currentX - startX)) + 'px';
                             document.getElementById('prop-width').value = target.style.width;
                         }
                         if (handle.classList.contains('resize-s') || handle.classList.contains('resize-se')) {
-                            const computedHeight = startHeight + (currentY - startY);
-                            target.style.height = computedHeight + 'px';
+                            target.style.height = (startHeight + (currentY - startY)) + 'px';
                             document.getElementById('prop-height').value = target.style.height;
                         }
                     }
@@ -349,7 +359,6 @@
             });
         }
 
-        // 3. PROPERTY ENGINE MAPPING
         function revealInspectorProperties(node) {
             inspectorPlaceholder.classList.add('d-none');
             inspectorControls.classList.remove('d-none');
@@ -390,7 +399,6 @@
             document.getElementById('gradient-subcontrols').classList.toggle('d-none', !bgImage.includes('linear-gradient'));
         }
 
-        // 4. PERSIST CHANGES FROM PANEL FIELDS
         function applyLiveInspectorUpdates() {
             if (!targetedActiveNode) return;
             const type = targetedActiveNode.getAttribute('data-node-type');
@@ -465,7 +473,7 @@
             linksList.appendChild(newLi);
         });
 
-        // 5. FULL-SCREEN TOGGLE MECHANICS
+        // Fullscreen Mode Toggle Link
         document.getElementById('toggle-view-mode').addEventListener('click', () => {
             masterFrame.classList.toggle('fullscreen-mode');
             const btn = document.getElementById('toggle-view-mode');
@@ -480,7 +488,7 @@
 
         function clearInspectorPanel() { targetedActiveNode = null; inspectorPlaceholder.classList.remove('d-none'); inspectorControls.classList.add('d-none'); }
 
-        // 6. RAW CODE COMPILER ENGINE
+        // Specialized recursive parser engine
         document.getElementById('master-compile-btn').addEventListener('click', () => {
             const cleanExtract = (element) => {
                 let htmlOut = '';
@@ -491,7 +499,6 @@
                         if (targetBlock) {
                             const blockClone = targetBlock.cloneNode(true);
                             
-                            // Recursive conversion for dropzones
                             const structuralDropzone = blockClone.querySelector('.nested-dropzone');
                             if (structuralDropzone) {
                                 structuralDropzone.innerHTML = cleanExtract(targetBlock.querySelector('.nested-dropzone'));
@@ -507,7 +514,7 @@
             };
 
             const compiledHtml = cleanExtract(canvas);
-            if (compiledHtml.trim() === '') { alert('Add block items onto the workspace canvas layout before compiling!'); return; }
+            if (compiledHtml.trim() === '') { alert('Add items onto the workspace canvas layout before compiling!'); return; }
 
             outputTextArea.value = `<div class="container-fluid px-1 py-2">\n${compiledHtml}</div>`;
             outputWindowCard.classList.remove('d-none');
